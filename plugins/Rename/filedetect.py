@@ -45,12 +45,12 @@ async def refunc(client, message, new_name, msg):
         if mime_type == "video":
             markup = InlineKeyboardMarkup([
                 [InlineKeyboardButton("📁 Document", callback_data="upload_document"),
-                 InlineKeyboardButton("🎥 Video", callback="upload_video")]
+                 InlineKeyboardButton("🎥 Video", callback_data="upload_video")]  # FIXED: changed `callback` to `callback_data`
             ])
         elif mime_type == "audio":
             markup = InlineKeyboardMarkup([
                 [InlineKeyboardButton("📁 Document", callback_data="upload_document"),
-                 InlineKeyboardButton("🎵 Audio", callback_data="upload_audio")]
+                 InlineKeyboardButton("🎵 Audio", callback_data="upload_audio")]  # FIXED
             ])
         else:
             markup = InlineKeyboardMarkup([[InlineKeyboardButton("📁 Document", callback_data="upload_document")]])
@@ -64,4 +64,4 @@ async def refunc(client, message, new_name, msg):
 
     except Exception as e:
         await message.reply_text(f"**Error:** {str(e)}")
-
+        
