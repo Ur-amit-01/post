@@ -1,6 +1,5 @@
-# Don't Remove Credit @VJ_Botz
-# Subscribe YouTube Channel For Amazing Bot @Tech_VJ
-# Ask Doubt on telegram @KingVJ01
+# Don't Remove Credit @Stellar_bots
+# Ask Doubt on telegram @xDzod
 
 from pyrogram import Client, filters
 from pyrogram.enums import MessageMediaType
@@ -64,4 +63,3 @@ async def refunc(client, message, new_name, msg):
 
     except Exception as e:
         await message.reply_text(f"**Error:** {str(e)}")
-        
