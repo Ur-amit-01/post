@@ -12,7 +12,7 @@ async def is_subscribed(bot, query, channel):
         try:
             await bot.get_chat_member(id, query.from_user.id)
         except UserNotParticipant:
-            btn.append([InlineKeyboardButton(f'Join {chat.title}', url=chat.invite_link)])
+            btn.append([InlineKeyboardButton(f'🛸 Join {chat.title} 🛸', url=chat.invite_link)])
         except Exception as e:
             print(e)
     return btn
@@ -24,11 +24,11 @@ def auth_check(func):
             if btn:
                 username = (await client.get_me()).username
                 start_param = message.command[1] if len(message.command) > 1 else "true"
-                btn.append([InlineKeyboardButton("🔄 Rᴇғʀᴇsʜ", url=f"https://t.me/{username}?start={start_param}")])
+                btn.append([InlineKeyboardButton("🔄 Rᴇғʀᴇsʜ 🔄", url=f"https://t.me/{username}?start={start_param}")])
 
                 await message.reply_photo(
                     photo=FORCE_PIC,  # Using the variable FORCE_PIC
-                    caption=f"<b>👋 Hello {message.from_user.mention},\nʏᴏᴜ ɴᴇᴇᴅ ᴊᴏɪɴ Mʏ ᴜᴘᴅᴀᴛᴇs ᴄʜᴀɴɴᴇʟ ɪɴ ᴏʀᴅᴇʀ ᴛᴏ ᴜsᴇ ᴍᴇ 😉\n\nPʀᴇss ᴛʜᴇ Fᴏʟʟᴏᴡɪɴɢ Bᴜᴛᴛᴏɴ ᴛᴏ ᴊᴏɪɴ Nᴏᴡ 👇</b>",
+                    caption=f"<b>👋 Hello {message.from_user.mention},\nᴛᴏ ᴘʀᴇᴠᴇɴᴛ ᴏᴠᴇʀʟᴏᴀᴅ, ᴏɴʟʏ ᴏᴜʀ ᴄʜᴀɴɴᴇʟ ᴜsᴇʀs ᴄᴀɴ ᴜsᴇ ᴛʜɪs ʙᴏᴛ,\n\nᴊᴏɪɴ ᴏᴜʀ ᴄʜᴀɴɴᴇʟ ᴀɴᴅ ᴄʟɪᴄᴋ Rᴇғʀᴇsʜ 👇🏻</b>",
                     reply_markup=InlineKeyboardMarkup(btn)
                 )
                 return
