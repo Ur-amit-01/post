@@ -4,50 +4,48 @@ from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, ForceRepl
 
 async def refunc(client, message, new_name, msg):
     try:
-        file = getattr(msg, msg.media.value)
+        file = getattr(msg, msg.media.value, None)
+        if not file:
+            await message.reply_text("**Error**: Unable to fetch file details.")
+            return
+
         filename = file.file_name
-        types = file.mime_type.split("/")
+        if not filename:
+            await message.reply_text("**Error**: No filename detected in the file metadata.")
+            return
+
+        types = file.mime_type.split("/") if file.mime_type else ["unknown"]
         mime = types[0]
+
+        # Clean new name to avoid issues
+        new_name = new_name.replace(".mp4", "").replace(".mkv", "").replace(".", "")
+
         try:
-            if ".mp4" or ".mkv" in new_name:
-                if ".mp4" in new_name:
-                    new_name = new_name.replace(".mp4", "")  # Remove the dot from new_name
-                if ".mkv" in new_name:
-                    new_name = new_name.replace(".mkv", "")
-            else:
-                new_name = new_name
-            if "." in new_name:
-                new_name = new_name.replace(".", "")  
-            if mime == "video":
-                markup = InlineKeyboardMarkup([[
-                    InlineKeyboardButton("📁 Document", callback_data="upload_document"),
-                    InlineKeyboardButton("🎥 Video", callback_data="upload_video")]])
-            elif mime == "audio":
-                markup = InlineKeyboardMarkup([[InlineKeyboardButton(
-                    "📁 Document", callback_data="upload_document"), InlineKeyboardButton("🎵 audio", callback_data="upload_audio")]])
-            else:
-                markup = InlineKeyboardMarkup(
-                    [[InlineKeyboardButton("📁 Document", callback_data="upload_document")]])
-            await message.reply_text(f"**Select the output file type**\n**🎞New Name** :- ```{out_filename}```", reply_to_message_id=msg.id, reply_markup=markup)
-
+            out_name = filename.split(".")[-1]  # Extract file extension
+            out_filename = f"{new_name}.{out_name}"
         except:
-            try:
-                out = filename.split(".")
-                out_name = out[-1]
-                out_filename = new_name + "." + out_name
-            except:
-                await message.reply_text("**Error** :  No  Extension in File, Not Supporting")
-                return
-            if mime == "video":
-                markup = InlineKeyboardMarkup([[InlineKeyboardButton(
-                    "📁 Document", callback_data="upload_document"), InlineKeyboardButton("🎥 Video", callback_data="upload_video")]])
-            elif mime == "audio":
-                markup = InlineKeyboardMarkup([[InlineKeyboardButton(
-                    "📁 Document", callback_data="upload_document"), InlineKeyboardButton("🎵 audio", callback_data="upload_audio")]])
-            else:
-                markup = InlineKeyboardMarkup(
-                    [[InlineKeyboardButton("📁 Document", callback_data="upload_document")]])
-            await message.reply_text(f"**Select the output file type**\n**🎞New Name ->** :- {out_filename}", reply_to_message_id=msg.id, reply_markup=markup)
-    except Exception as e:
-        print(f"error: {e}")
+            await message.reply_text("**Error**: No extension in file, not supported.")
+            return
 
+        # Define markup based on mime type
+        if mime == "video":
+            markup = InlineKeyboardMarkup([
+                [InlineKeyboardButton("📁 Document", callback_data="upload_document"),
+                 InlineKeyboardButton("🎥 Video", callback_data="upload_video")]
+            ])
+        elif mime == "audio":
+            markup = InlineKeyboardMarkup([
+                [InlineKeyboardButton("📁 Document", callback_data="upload_document"),
+                 InlineKeyboardButton("🎵 Audio", callback_data="upload_audio")]
+            ])
+        else:
+            markup = InlineKeyboardMarkup([
+                [InlineKeyboardButton("📁 Document", callback_data="upload_document")]
+            ])
+
+        await message.reply_text(f"**Select the output file type**\n**🎞New Name:** `{out_filename}`",
+                                 reply_to_message_id=msg.id, reply_markup=markup)
+
+    except Exception as e:
+        print(f"Error: {e}")
+        await message.reply_text(f"**Unexpected Error**: {e}")
