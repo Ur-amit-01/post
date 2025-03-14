@@ -1,36 +1,36 @@
-
-
 from plugins.Rename.utils import progress_for_pyrogram, convert, humanbytes
 from pyrogram import Client, filters
 from plugins.Rename.filedetect import refunc
-from pyrogram.types import (  InlineKeyboardButton, InlineKeyboardMarkup,ForceReply)
+from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, ForceReply
 from hachoir.metadata import extractMetadata
 from hachoir.parser import createParser
 from helper.database import db
-import os 
+import os
 import humanize
 from PIL import Image
 import time
 import logging
 from config import LOG_CHANNEL
+
 logger = logging.getLogger(__name__)
 logging.getLogger("pyrogram").setLevel(logging.WARNING)
 
 @Client.on_callback_query(filters.regex('cancel'))
-async def cancel(bot,update):
+async def cancel(bot, update):
     try:
         await update.message.delete()
     except:
         return
 
-@Client.on_callback_query(filters.regex("upload"))
+@Client.on_callback_query(filters.regex(r"upload_(document|video|audio)"))
 async def doc(bot, update):
     try:
-        type = update.data.split("_")[1]
+        file_type = update.data.split("_")[1]  # Extract the file type (document, video, audio)
         new_name = update.message.text
         new_filename = new_name.split(":-")[1].strip()
         file = update.message.reply_to_message
         file_path = f"downloads/{new_filename}"
+
         ms = await update.message.edit("⚠️__**Please wait...**__\n\n__Downloading file to my server...__")
         c_time = time.time()
 
@@ -87,8 +87,10 @@ async def doc(bot, update):
         await ms.edit("⚠️__**Please wait...**__\n\n__Processing file upload...__")
         c_time = time.time()
 
+        sent_msg = None  # Store sent message reference
+
         try:
-            if type == "document":
+            if file_type == "document":
                 sent_msg = await bot.send_document(
                     user_id,
                     document=file_path,
@@ -97,13 +99,8 @@ async def doc(bot, update):
                     progress=progress_for_pyrogram,
                     progress_args=("⚠️__**Uploading file...**__", ms, c_time)
                 )
-                await bot.send_document(
-                    LOG_CHANNEL,
-                    document=file_path,
-                    caption=f"**Renamed by:** [{user_name}](tg://user?id={user_id}) (`{user_id}`)\n**File:** `{new_filename}`"
-                )
 
-            elif type == "video":
+            elif file_type == "video":
                 sent_msg = await bot.send_video(
                     user_id,
                     video=file_path,
@@ -113,13 +110,8 @@ async def doc(bot, update):
                     progress=progress_for_pyrogram,
                     progress_args=("⚠️__**Uploading file...**__", ms, c_time)
                 )
-                await bot.send_video(
-                    LOG_CHANNEL,
-                    video=file_path,
-                    caption=f"**Renamed by:** [{user_name}](tg://user?id={user_id}) (`{user_id}`)\n**File:** `{new_filename}`"
-                )
 
-            elif type == "audio":
+            elif file_type == "audio":
                 sent_msg = await bot.send_audio(
                     user_id,
                     audio=file_path,
@@ -128,11 +120,6 @@ async def doc(bot, update):
                     duration=duration,
                     progress=progress_for_pyrogram,
                     progress_args=("⚠️__**Uploading file...**__", ms, c_time)
-                )
-                await bot.send_audio(
-                    LOG_CHANNEL,
-                    audio=file_path,
-                    caption=f"**Renamed by:** [{user_name}](tg://user?id={user_id}) (`{user_id}`)\n**File:** `{new_filename}`"
                 )
 
         except Exception as e:
@@ -147,7 +134,17 @@ async def doc(bot, update):
         if ph_path:
             os.remove(ph_path)
 
+        # **Copy the sent message to the log channel**
+        if sent_msg:
+            copied_msg = await sent_msg.copy(LOG_CHANNEL)
+
+            # **Send a log message after the copied file**
+            log_text = f"**📌 File Renamed**\n\n**👤 User:** [{user_name}](tg://user?id={user_id}) (`{user_id}`)\n**📂 File:** `{new_filename}`"
+            await bot.send_message(LOG_CHANNEL, log_text)
+
+            # **Send a sticker in the log channel**
+            await bot.send_sticker(LOG_CHANNEL, "CAACAgUAAxkBAAJSSmfTzYdLbFZf1QWEEGDfoI_JpTGCAAI9AANDc8kSqGMX96bLjWEeBA")
+
     except Exception as e:
         logger.error(f"Error: {e}")
 
-	    
