@@ -1,6 +1,5 @@
 from pyrogram import Client, filters
-from pyrogram.enums import MessageMediaType
-from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, ForceReply
+from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 async def refunc(client, message, new_name, msg):
     try:
@@ -9,23 +8,22 @@ async def refunc(client, message, new_name, msg):
             await message.reply_text("**Error**: Unable to fetch file details.")
             return
 
-        filename = file.file_name
+        # Extract filename if available, otherwise use a fallback
+        filename = file.file_name if file.file_name else None
+        mime_type = file.mime_type if file.mime_type else "unknown/unknown"
+        mime = mime_type.split("/")[0]  # Extract main type (video, audio, etc.)
+
+        # Set default filename if missing
         if not filename:
-            await message.reply_text("**Error**: No filename detected in the file metadata.")
-            return
+            default_extension = "mp4" if mime == "video" else "mp3" if mime == "audio" else "bin"
+            filename = f"{file.unique_id}.{default_extension}"  # Use unique_id + default extension
 
-        types = file.mime_type.split("/") if file.mime_type else ["unknown"]
-        mime = types[0]
-
-        # Clean new name to avoid issues
+        # Clean new name
         new_name = new_name.replace(".mp4", "").replace(".mkv", "").replace(".", "")
-
-        try:
-            out_name = filename.split(".")[-1]  # Extract file extension
-            out_filename = f"{new_name}.{out_name}"
-        except:
-            await message.reply_text("**Error**: No extension in file, not supported.")
-            return
+        
+        # Extract file extension and create new filename
+        out_name = filename.split(".")[-1]  # Extract the extension
+        out_filename = f"{new_name}.{out_name}"
 
         # Define markup based on mime type
         if mime == "video":
@@ -49,3 +47,4 @@ async def refunc(client, message, new_name, msg):
     except Exception as e:
         print(f"Error: {e}")
         await message.reply_text(f"**Unexpected Error**: {e}")
+
