@@ -1,6 +1,5 @@
 import motor.motor_asyncio
 from config import *
-from plugins.Rename.utils import send_log
 
 class Database:
 
