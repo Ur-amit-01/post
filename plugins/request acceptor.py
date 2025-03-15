@@ -3,9 +3,8 @@ import asyncio
 from pyrogram import Client, filters, enums
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from config import API_ID, API_HASH, BOT_TOKEN, NEW_REQ_MODE, SESSION_STRING
-from filters import user_filter
 
-@Client.on_message(filters.command('accept') & user_filter)
+@Client.on_message(filters.command('accept'))
 async def accept(client, message):
     # Log the chat type for debugging
     print(f"Received message from chat: {message.chat.type}")
