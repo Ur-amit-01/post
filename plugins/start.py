@@ -170,7 +170,7 @@ ABOUT_TXT = """
 </b>"""
 
 HELP_TXT = """
-🌌 <b><u>My Functions 👇🏻</u></b>
+🛸 <b><u>My Functions</u></b> 🛸
 """
 
 Rename_TXT = """
