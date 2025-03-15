@@ -1,4 +1,4 @@
-
+import humanize
 from pyrogram import Client, filters
 from pyrogram.enums import MessageMediaType
 from pyrogram.errors import FloodWait
@@ -13,30 +13,34 @@ from PIL import Image
 import os, time, re, random, asyncio
 
 
-@Client.on_message(filters.private & (filters.document | filters.audio | filters.video))
+@Client.on_message(filters.private & filters.command("rename"))
+@auth_check
 async def rename_start(client, message):
-    file = getattr(message, message.media.value)
-    filename = file.file_name  
+    msg = await client.ask(message.chat.id, "Now send me your file/video/audio to rename.")
+
+    if not msg.media or msg.media not in [enums.MessageMediaType.VIDEO, enums.MessageMediaType.DOCUMENT, enums.MessageMediaType.AUDIO]:
+        return await message.reply("Please send me a supported media file (video, document, or audio).")
+
+    file = getattr(msg, msg.media.value)
+    filename = file.file_name
+    filesize = humanize.naturalsize(file.file_size)
+
     if file.file_size > 2000 * 1024 * 1024:
-         return await message.reply_text("Sorry Bro This Bot Doesn't Support Uploading Files Bigger Than 2GB")
+        return await message.reply("Sorry, this bot doesn't support uploading files bigger than 2GB.")
 
     try:
         await message.reply_text(
-            text=f"**Please Enter New Filename...**\n\n**Old File Name** :- `{filename}`",
-	    reply_to_message_id=message.id,  
-	    reply_markup=ForceReply(True)
-        )       
-        await sleep(30)
-    except FloodWait as e:
-        await sleep(e.value)
-        await message.reply_text(
-            text=f"**Please Enter New Filename**\n\n**Old File Name** :- `{filename}`",
-	    reply_to_message_id=message.id,  
-	    reply_markup=ForceReply(True)
-        )
-    except:
-        pass
-
+            text=f"**Please Enter New Filename...**\n\n**Old File Name**: `{filename}`\n\n**Old File Size**: `{filesize}`",
+            reply_to_message_id=msg.id,
+            reply_markup=ForceReply(True)
+        
+        kk = await client.listen(message.chat.id, timeout=30)
+        if kk.text:
+            await refunc(client, message, kk.text, msg)
+        else:
+            await message.reply("No new filename provided. Operation cancelled.")
+    except Exception as e:
+        await message.reply(f"An error occurred: {e}")
 
 
 @Client.on_message(filters.private & filters.reply)
