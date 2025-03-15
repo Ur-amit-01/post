@@ -3,16 +3,23 @@ from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQ
 from helper.database import db
 from config import RENAME_MODE
 
+# Variable for the settings page picture
+Setting_pic = "https://telegra.ph/file/e292b12890b8b4b9dcbd1.jpg"  # Replace with your file ID or URL
+
 
 async def get_settings_text(user_id):
     """Returns the settings text with thumbnail and caption info."""
     thumb = await db.get_thumbnail(user_id)
     caption = await db.get_caption(user_id)
 
-    text = "**⚙️ Settings Menu**\n\n"
-    text += "🖼 **Thumbnail:** " + ("✅ Set" if thumb else "❌ Not Set") + "\n"
-    text += "📝 **Caption:** " + (f"✅ Set\n\n📄 `{caption}`" if caption else "❌ Not Set") + "\n"
-    text += "\n🔽 **Use the buttons below to manage your settings.**"
+    # Custom text with the desired formatting
+    text = "╭───[ ꜱᴇᴛᴛɪɴɢꜱ ]───〄\n"
+    text += "│\n"
+    text += f"│ ᴛʜᴜᴍʙ sᴛᴀᴛᴜs : {'✅' if thumb else '❌'}\n"
+    text += f"│ ᴄᴀᴘᴛɪᴏɴ ᴍᴏᴅᴇ : {'✅' if caption else '❌'}\n"
+    text += "│\n"
+    text += "╰───────────⍟\n\n"
+    text += "🔽 **Use the buttons below to manage your settings.**"
 
     return text
 
@@ -34,9 +41,15 @@ async def settings_menu(client, message):
          InlineKeyboardButton("🗑 Delete Caption", callback_data="del_caption")]
     ]
 
-    await message.reply_text(
-        text, reply_markup=InlineKeyboardMarkup(buttons)
-    )
+    # Send the settings menu with the picture
+    if Setting_pic:
+        await client.send_photo(
+            chat_id=message.chat.id,
+            photo=Setting_pic,
+            caption=text,
+            reply_markup=InlineKeyboardMarkup(buttons))
+    else:
+        await message.reply_text(text, reply_markup=InlineKeyboardMarkup(buttons))
 
 
 @Client.on_callback_query(filters.regex("^set_thumb$"))
@@ -65,8 +78,10 @@ async def show_thumbnail(client: Client, query: CallbackQuery):
 
     thumb = await db.get_thumbnail(query.from_user.id)
     if thumb:
-        await query.message.edit_media(
-            media=enums.InputMediaPhoto(thumb),
+        await client.send_photo(
+            chat_id=query.message.chat.id,
+            photo=thumb,
+            caption="🖼 **Your Thumbnail**",
             reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back", callback_data="settings")]])
         )
     else:
@@ -156,5 +171,13 @@ async def back_to_settings(client: Client, query: CallbackQuery):
          InlineKeyboardButton("🗑 Delete Caption", callback_data="del_caption")]
     ]
 
-    await query.message.edit_text(text, reply_markup=InlineKeyboardMarkup(buttons))
+    # Send the settings menu with the picture
+    if Setting_pic:
+        await client.send_photo(
+            chat_id=query.message.chat.id,
+            photo=Setting_pic,
+            caption=text,
+            reply_markup=InlineKeyboardMarkup(buttons))
+    else:
+        await query.message.edit_text(text, reply_markup=InlineKeyboardMarkup(buttons))
 
