@@ -13,3 +13,5 @@ TgCrypto
 dnspython
 aiohttp
 pikepdf
+pytz
+pyromod
