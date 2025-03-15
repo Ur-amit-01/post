@@ -38,7 +38,8 @@ async def settings_menu(client, message):
          InlineKeyboardButton("❌ Delete Thumbnail", callback_data="del_thumb")],
         [InlineKeyboardButton("✏️ Set Caption", callback_data="set_caption")],
         [InlineKeyboardButton("📄 View Caption", callback_data="see_caption"),
-         InlineKeyboardButton("🗑 Delete Caption", callback_data="del_caption")]
+         InlineKeyboardButton("🗑 Delete Caption", callback_data="del_caption")],
+        [InlineKeyboardButton("Back", callback_data="start")]
     ]
 
     # Send the settings menu with the picture
@@ -197,7 +198,8 @@ async def back_to_settings(client: Client, query: CallbackQuery):
          InlineKeyboardButton("❌ Delete Thumbnail", callback_data="del_thumb")],
         [InlineKeyboardButton("✏️ Set Caption", callback_data="set_caption")],
         [InlineKeyboardButton("📄 View Caption", callback_data="see_caption"),
-         InlineKeyboardButton("🗑 Delete Caption", callback_data="del_caption")]
+         InlineKeyboardButton("🗑 Delete Caption", callback_data="del_caption")],
+        [InlineKeyboardButton("Back", callback_data="start")]
     ]
 
     # Edit the message to show the settings menu
