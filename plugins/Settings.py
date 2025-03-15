@@ -18,7 +18,6 @@ async def get_settings_text(user_id):
     text += f"**│ ᴛʜᴜᴍʙ sᴛᴀᴛᴜs : {'✅' if thumb else '❌'}**\n"
     text += f"**│ ᴄᴀᴘᴛɪᴏɴ ᴍᴏᴅᴇ : {'✅' if caption else '❌'}**\n"
     text += "**╰───────────⍟**\n\n"
-    text += "🔽 **Use the buttons below to manage your settings.**"
 
     return text
 
