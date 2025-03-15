@@ -2,6 +2,7 @@ from pyrogram import Client, filters, enums
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from helper.database import db
 from config import RENAME_MODE
+from plugins.start import cb_handler
 
 # Variable for the settings page picture
 Setting_pic = "https://telegra.ph/file/e292b12890b8b4b9dcbd1.jpg"  # Replace with your file ID or URL
@@ -36,7 +37,8 @@ async def settings_menu(client, message):
          InlineKeyboardButton("❌ Delete Thumbnail", callback_data="del_thumb")],
         [InlineKeyboardButton("✏️ Set Caption", callback_data="set_caption")],
         [InlineKeyboardButton("📄 View Caption", callback_data="see_caption"),
-         InlineKeyboardButton("🗑 Delete Caption", callback_data="del_caption")]
+         InlineKeyboardButton("🗑 Delete Caption", callback_data="del_caption")],
+        [InlineKeyboardButton("◀️ 𝙱𝙰𝙲𝙺", callback_data="help")]
     ]
 
     # Send the settings menu with the picture
@@ -57,7 +59,7 @@ async def set_thumbnail(client: Client, query: CallbackQuery):
     # Edit the existing message to prompt for a thumbnail
     await query.message.edit_text(
         "📷 **Send me a thumbnail image**",
-        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back", callback_data="settings")]])
+        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("◀️ 𝙱𝙰𝙲𝙺", callback_data="settings")]])
     )
 
     # Wait for the user to send a thumbnail
@@ -69,11 +71,11 @@ async def set_thumbnail(client: Client, query: CallbackQuery):
         await thumb.delete()
         # Edit the original message to confirm
         await query.message.edit_text("✅ **Thumbnail saved successfully!**", reply_markup=InlineKeyboardMarkup([
-            [InlineKeyboardButton("🔙 Back", callback_data="settings")]
+            [InlineKeyboardButton("◀️ 𝙱𝙰𝙲𝙺", callback_data="settings")]
         ]))
     else:
         await query.message.edit_text("❌ **Invalid file! Please send an image.**", reply_markup=InlineKeyboardMarkup([
-            [InlineKeyboardButton("🔙 Back", callback_data="settings")]
+            [InlineKeyboardButton("◀️ 𝙱𝙰𝙲𝙺", callback_data="settings")]
         ]))
 
 
@@ -87,7 +89,7 @@ async def show_thumbnail(client: Client, query: CallbackQuery):
         # Edit the message to show the thumbnail
         await query.message.edit_media(
             media=enums.InputMediaPhoto(thumb),
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back", callback_data="settings")]])
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("◀️ 𝙱𝙰𝙲𝙺", callback_data="settings")]])
         )
     else:
         await query.answer("😔 No thumbnail found!", show_alert=True)
@@ -105,7 +107,7 @@ async def delete_thumbnail(client: Client, query: CallbackQuery):
     # Delete the thumbnail
     await db.set_thumbnail(query.from_user.id, file_id=None)
     await query.message.edit_text("✅ **Thumbnail deleted successfully!**", reply_markup=InlineKeyboardMarkup([
-        [InlineKeyboardButton("🔙 Back", callback_data="settings")]
+        [InlineKeyboardButton("◀️ 𝙱𝙰𝙲𝙺", callback_data="settings")]
     ]))
 
 
@@ -121,7 +123,7 @@ async def set_caption(client: Client, query: CallbackQuery):
         "📂 File Name: `{filename}`\n"
         "💾 Size: `{filesize}`\n"
         "⏰ Duration: `{duration}`",
-        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back", callback_data="settings")]])
+        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("◀️ 𝙱𝙰𝙲𝙺", callback_data="settings")]])
     )
 
     # Wait for the user to send a caption
@@ -132,7 +134,7 @@ async def set_caption(client: Client, query: CallbackQuery):
     await caption.delete()
     # Edit the original message to confirm
     await query.message.edit_text("✅ **Caption saved successfully!**", reply_markup=InlineKeyboardMarkup([
-        [InlineKeyboardButton("🔙 Back", callback_data="settings")]
+        [InlineKeyboardButton("◀️ 𝙱𝙰𝙲𝙺", callback_data="settings")]
     ]))
 
 
@@ -144,7 +146,7 @@ async def see_caption(client: Client, query: CallbackQuery):
     caption = await db.get_caption(query.from_user.id)
     if caption:
         await query.message.edit_text(f"📄 **Your Caption:**\n\n`{caption}`", reply_markup=InlineKeyboardMarkup([
-            [InlineKeyboardButton("🔙 Back", callback_data="settings")]
+            [InlineKeyboardButton("◀️ 𝙱𝙰𝙲𝙺", callback_data="settings")]
         ]))
     else:
         await query.answer("No caption found! ❌", show_alert=True)
@@ -162,7 +164,7 @@ async def delete_caption(client: Client, query: CallbackQuery):
     # Delete the caption
     await db.set_caption(query.from_user.id, caption=None)
     await query.message.edit_text("✅ **Caption deleted successfully!**", reply_markup=InlineKeyboardMarkup([
-        [InlineKeyboardButton("🔙 Back", callback_data="settings")]
+        [InlineKeyboardButton("◀️ 𝙱𝙰𝙲𝙺", callback_data="settings")]
     ]))
 
 
@@ -181,7 +183,8 @@ async def back_to_settings(client: Client, query: CallbackQuery):
          InlineKeyboardButton("❌ Delete Thumbnail", callback_data="del_thumb")],
         [InlineKeyboardButton("✏️ Set Caption", callback_data="set_caption")],
         [InlineKeyboardButton("📄 View Caption", callback_data="see_caption"),
-         InlineKeyboardButton("🗑 Delete Caption", callback_data="del_caption")]
+         InlineKeyboardButton("🗑 Delete Caption", callback_data="del_caption")],
+        [InlineKeyboardButton("◀️ 𝙱𝙰𝙲𝙺", callback_data="help")]
     ]
 
     # Edit the message to show the settings menu
