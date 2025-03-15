@@ -4,7 +4,7 @@
 
 import math
 import time 
-from Script import script
+from plugins.start import PROGRESS_BAR
 from pyrogram.errors import UserNotParticipant
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from pyrogram import enums
@@ -29,7 +29,7 @@ async def progress_for_pyrogram(current, total, ud_type, message, start):
             ''.join(["▰" for i in range(math.floor(percentage / 10))]),
             ''.join(["▱" for i in range(10 - math.floor(percentage / 10))]))
             
-        tmp = progress + script.PROGRESS_BAR.format( 
+        tmp = progress + PROGRESS_BAR.format( 
             round(percentage, 2),
             humanbytes(current),
             humanbytes(total),
