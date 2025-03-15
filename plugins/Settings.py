@@ -13,10 +13,10 @@ async def get_settings_text(user_id):
     caption = await db.get_caption(user_id)
 
     # Custom text with the desired formatting
-    text = "**╭───[ ꜱᴇᴛᴛɪɴɢꜱ ]───〄**\n"
+    text = "**╭────[ ꜱᴇᴛᴛɪɴɢꜱ ]────〄**\n"
     text += f"**│ ᴛʜᴜᴍʙ sᴛᴀᴛᴜs : {'✅' if thumb else '❌'}**\n"
     text += f"**│ ᴄᴀᴘᴛɪᴏɴ ᴍᴏᴅᴇ : {'✅' if caption else '❌'}**\n"
-    text += "**╰───────────⍟**"
+    text += "**╰─────────────⍟**"
 
     return text
 
