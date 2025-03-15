@@ -2,10 +2,10 @@ from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQ
 from pyrogram import Client, filters
 from helper.database import db
 
-# ======================= Settings Callback Handler ======================= #
-@Client.on_callback_query(filters.regex("^settings$"))
-async def settings_callback_handler(client: Client, query: CallbackQuery):
-    user_id = query.from_user.id
+# ======================= Settings Command Handler ======================= #
+@Client.on_message(filters.command("settings") & filters.private)
+async def settings_command_handler(client: Client, message: Message):
+    user_id = message.from_user.id
 
     # Create buttons for settings
     buttons = [
@@ -23,11 +23,12 @@ async def settings_callback_handler(client: Client, query: CallbackQuery):
     ]
 
     # Send the settings menu
-    await query.message.edit_text(
+    await message.reply_text(
         "**⚙️ Settings Menu**\n\n"
         "Here you can manage your thumbnail and caption settings.",
         reply_markup=InlineKeyboardMarkup(buttons),
     )
+
 
 # ======================= Set Thumbnail ======================= #
 @Client.on_callback_query(filters.regex("^set_thumb$"))
