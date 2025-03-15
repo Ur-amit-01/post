@@ -1,30 +1,13 @@
-from plugins.Rename.utils import progress_for_pyrogram, convert, humanbytes
-from pyrogram import Client, filters
-from plugins.Rename.filedetect import refunc
-from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, ForceReply
-from hachoir.metadata import extractMetadata
-from hachoir.parser import createParser
-from helper.database import db
-import os
-import humanize
-from PIL import Image
-import time
-import logging
-from config import LOG_CHANNEL
-
-
-
-
 
 from pyrogram import Client, filters
 from pyrogram.enums import MessageMediaType
 from pyrogram.errors import FloodWait
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, ForceReply
 from hachoir.metadata import extractMetadata
-from helper.ffmpeg import fix_thumb, take_screen_shot, add_metadata
+from plugins.Rename.ffmpeg import fix_thumb, take_screen_shot, add_metadata
 from hachoir.parser import createParser
-from helper.utils import progress_for_pyrogram, convert, humanbytes, add_prefix_suffix
-from helper.database import jishubotz
+from plugins.Rename.utils import progress_for_pyrogram, convert, humanbytes, add_prefix_suffix
+from helper.database import db
 from asyncio import sleep
 from PIL import Image
 import os, time, re, random, asyncio
