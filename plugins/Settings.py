@@ -2,6 +2,9 @@ from pyrogram import Client, filters, enums
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from helper.database import db
 from config import RENAME_MODE
+from PIL import Image
+import os
+
 
 # Variable for the settings page picture
 Setting_pic = "https://telegra.ph/file/e292b12890b8b4b9dcbd1.jpg"  # Replace with your file ID or URL
@@ -75,21 +78,39 @@ async def set_thumbnail(client: Client, query: CallbackQuery):
             [InlineKeyboardButton("◀️ 𝙱𝙰𝙲𝙺", callback_data="settings")]
         ]))
 
-
 @Client.on_callback_query(filters.regex("^show_thumb$"))
 async def show_thumbnail(client: Client, query: CallbackQuery):
     if not RENAME_MODE:
         return
 
-    thumb = await db.get_thumbnail(query.from_user.id)
-    if thumb:
-        # Edit the message to show the thumbnail
-        await query.message.edit_media(
-            media=enums.InputMediaPhoto(thumb),
+    # Retrieve the thumbnail file_id from the database
+    c_thumb = await db.get_thumbnail(query.from_user.id)
+    if not c_thumb:
+        return await query.answer("😔 No thumbnail found!", show_alert=True)
+
+    try:
+        # Download the thumbnail
+        ph_path = await client.download_media(c_thumb)
+
+        # Process the thumbnail
+        with Image.open(ph_path) as img:
+            img = img.convert("RGB")  # Convert to RGB format
+            img = img.resize((320, 320))  # Resize to 320x320
+            img.save(ph_path, "JPEG")  # Save as JPEG
+
+        # Send the processed thumbnail
+        await client.send_photo(
+            chat_id=query.message.chat.id,
+            photo=ph_path,
+            caption="🖼 **Your Thumbnail**",
             reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("◀️ 𝙱𝙰𝙲𝙺", callback_data="settings")]])
         )
-    else:
-        await query.answer("😔 No thumbnail found!", show_alert=True)
+
+        # Delete the downloaded file after sending
+        os.remove(ph_path)
+    except Exception as e:
+        print(f"Error processing thumbnail: {e}")
+        await query.answer("❌ Failed to process thumbnail!", show_alert=True)
 
 
 @Client.on_callback_query(filters.regex("^del_thumb$"))
