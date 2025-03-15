@@ -60,7 +60,7 @@ async def set_thumbnail(client: Client, query: CallbackQuery):
     )
 
     # Wait for the user to send a thumbnail
-    thumb = await client.ask(query.message.chat.id, "📷 **Send a thumbnail image:**")
+    thumb = await client.ask(query.message.chat.id)
     if thumb.media and thumb.media == enums.MessageMediaType.PHOTO:
         # Save the thumbnail file ID
         await db.set_thumbnail(query.from_user.id, file_id=thumb.photo.file_id)
@@ -116,20 +116,16 @@ async def set_caption(client: Client, query: CallbackQuery):
     # Edit the existing message to prompt for a caption
     await query.message.edit_text(
         "✏ **Send me a caption to set.**\n\n"
-        "📂 **Available Fillings:**\n"
-        "📂 File Name: `{filename}`\n"
-        "💾 Size: `{filesize}`\n"
-        "⏰ Duration: `{duration}`",
+        "> 📂 **Available Fillings:**\n"
+        "📂 **File Name**: `{filename}`\n"
+        "💾 **Size**: `{filesize}`\n"
+        "⏰ **Duration**: `{duration}`",
         reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("◀️ 𝙱𝙰𝙲𝙺", callback_data="settings")]])
     )
-
-    # Wait for the user to send a caption
-    caption = await client.ask(query.message.chat.id, "✏ **Enter your caption:**")
-    # Save the caption
+    
+    caption = await client.ask(query.message.chat.id)
     await db.set_caption(query.from_user.id, caption=caption.text)
-    # Delete the user's caption message
     await caption.delete()
-    # Edit the original message to confirm
     await query.message.edit_text("✅ **Caption saved successfully!**", reply_markup=InlineKeyboardMarkup([
         [InlineKeyboardButton("◀️ 𝙱𝙰𝙲𝙺", callback_data="settings")]
     ]))
