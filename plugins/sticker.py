@@ -1,8 +1,6 @@
-
 from pyrogram import Client, filters
-from filters import user_filter
 
-@Client.on_message(filters.command("stickerid") & filters.private & user_filter)
+@Client.on_message(filters.command("stickerid") & filters.private)
 async def stickerid(bot, message):
     replied_msg = message.reply_to_message
 
