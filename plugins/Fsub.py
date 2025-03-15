@@ -28,7 +28,7 @@ def auth_check(func):
 
                 await message.reply_photo(
                     photo=FORCE_PIC,  # Using the variable FORCE_PIC
-                    caption=f"<b>👋 Hello {message.from_user.mention},\nᴛᴏ ᴘʀᴇᴠᴇɴᴛ ᴏᴠᴇʀʟᴏᴀᴅ, ᴏɴʟʏ ᴏᴜʀ ᴄʜᴀɴɴᴇʟ ᴜsᴇʀs ᴄᴀɴ ᴜsᴇ ᴛʜɪs ʙᴏᴛ,\n\nᴊᴏɪɴ ᴏᴜʀ ᴄʜᴀɴɴᴇʟ ᴀɴᴅ ᴄʟɪᴄᴋ Rᴇғʀᴇsʜ 👇🏻</b>",
+                    caption=f"<b>👋🏻 Hello {message.from_user.mention}\nᴛᴏ ᴘʀᴇᴠᴇɴᴛ ᴏᴠᴇʀʟᴏᴀᴅ, ᴏɴʟʏ ᴏᴜʀ ᴄʜᴀɴɴᴇʟ ᴜsᴇʀs ᴄᴀɴ ᴜsᴇ ᴛʜɪs ʙᴏᴛ.\n\nᴊᴏɪɴ ᴏᴜʀ ᴄʜᴀɴɴᴇʟ ᴀɴᴅ ᴄʟɪᴄᴋ Rᴇғʀᴇsʜ 👇🏻</b>",
                     reply_markup=InlineKeyboardMarkup(btn)
                 )
                 return
