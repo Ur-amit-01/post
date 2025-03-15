@@ -7,6 +7,7 @@ from helper.database import db
 from pyrogram.errors import *
 import random
 from plugins.Fsub import auth_check
+from settings import back_to_settings
 
 # =====================================================================================
 @Client.on_message(filters.private & filters.command("start"))
@@ -28,7 +29,8 @@ async def start(client, message):
         f"> **ᴅᴇᴠᴇʟᴏᴘᴇʀ 🧑🏻‍💻 :- @Axa_bachha**"
     )
     button = InlineKeyboardMarkup([
-        [InlineKeyboardButton('📜 ᴀʙᴏᴜᴛ', callback_data='about'), InlineKeyboardButton('🕵🏻‍♀️ ʜᴇʟᴘ', callback_data='help')]
+        [InlineKeyboardButton('📜 ᴀʙᴏᴜᴛ', callback_data='about'), InlineKeyboardButton('🕵🏻‍♀️ ʜᴇʟᴘ', callback_data='help')],
+        [InlineKeyboardButton("⚙️ ꜱᴇᴛᴛɪɴɢꜱ ", callback_data="settings")]
     ])
     if START_PIC:
         await message.reply_photo(START_PIC, caption=txt, reply_markup=button)
