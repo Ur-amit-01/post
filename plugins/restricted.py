@@ -7,8 +7,7 @@ import pyrogram
 from pyrogram import Client, filters, enums
 from pyrogram.errors import FloodWait, UserIsBlocked, InputUserDeactivated, UserAlreadyParticipant, InviteHashExpired, UsernameNotOccupied
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message, CallbackQuery
-from config import API_ID, API_HASH, BOT_TOKEN, ERROR_MESSAGE, SESSION_STRING, LOG_CHANNEL
-from filters import user_filter
+from config import *
 
 start_time = time.time()
 logging.basicConfig(level=logging.DEBUG)
@@ -126,7 +125,7 @@ async def send_cancel(client: Client, message: Message):
         text="**Batch Successfully Cancelled.**"
     )
 
-@Client.on_message(filters.text & filters.private & filters.regex("https://t.me/") & user_filter)
+@Client.on_message(filters.text & filters.private & filters.regex("https://t.me/"))
 async def save(client: Client, message: Message):
     if "https://t.me/" in message.text:
         if batch_temp.IS_BATCH.get(message.from_user.id) == False:
