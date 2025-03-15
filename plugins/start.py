@@ -207,25 +207,22 @@ https://envs.sh/Fyw.jpg
 </b>"""
 
 RESTRICTED_TXT = """
-<b>
-> 💡 Restricted Content Saver
+> **💡 Restricted Content Saver**
 
-1. 🔒 Private Chats
+**1. 🔒 Private Chats**
 ➥ For Owner Only :)
 
-2. 🌐 Public Chats
+**2. 🌐 Public Chats**
 ➥ Simply share the post link. I'll download it for you.
 
-3. 📂 Batch Mode
+**3. 📂 Batch Mode**
 ➥ Download multiple posts using this format:
-> https://t.me/xxxx/1001-1010
-</b>
+> **https://t.me/xxxx/1001-1010**
 """
 
 MERGER_TXT = """
 <b>
 > 📜 PDF Merging
-
 • /merge - Start merging process
 • Upload PDFs or Images in sequence
 • /done - Merge all PDFs
@@ -236,7 +233,7 @@ MERGER_TXT = """
 
 > ✨ Customizations
 • Filename: Provide a custom name
-• Thumbnail: Use (Filename) -t (Thumbnail link)
+• Custom Thumbnail: /set_thumb
 </b>
 """
 
