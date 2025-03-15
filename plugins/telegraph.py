@@ -2,7 +2,6 @@ import os
 import requests
 from pyrogram import Client, filters
 from pyrogram.types import Message
-from filters import user_filter
 
 # Function to upload media to envs.sh
 def upload_image_requests(image_path):
@@ -24,7 +23,7 @@ def upload_image_requests(image_path):
         return None
 
 # Command to handle /telegraph
-@Client.on_message(filters.command("telegraph") & filters.private & user_filter)
+@Client.on_message(filters.command("telegraph") & filters.private)
 async def telegraph_upload(bot: Client, message: Message):
     # Check if the command is used as a reply
     if not message.reply_to_message:
