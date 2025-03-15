@@ -15,7 +15,7 @@ async def get_settings_text(user_id):
     # Custom text with the desired formatting
     text = "**╭────[ ꜱᴇᴛᴛɪɴɢꜱ ]────〄**\n"
     text += f"**│ ᴛʜᴜᴍʙ sᴛᴀᴛᴜs : {'✅' if thumb else '❌'}**\n"
-    text += f"**│ ᴄᴀᴘᴛɪᴏɴ ᴍᴏᴅᴇ : {'✅' if caption else '❌'}**\n"
+    text += f"**│ ᴄᴀᴘᴛɪᴏɴ sᴛᴀᴛᴜs : {'✅' if caption else '❌'}**\n"
     text += "**╰─────────────⍟**"
 
     return text
