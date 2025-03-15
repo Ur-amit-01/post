@@ -6,19 +6,17 @@ from config import RENAME_MODE
 # Variable for the settings page picture
 Setting_pic = "https://telegra.ph/file/e292b12890b8b4b9dcbd1.jpg"  # Replace with your file ID or URL
 
-
 async def get_settings_text(user_id):
     """Returns the settings text with thumbnail and caption info."""
     thumb = await db.get_thumbnail(user_id)
     caption = await db.get_caption(user_id)
 
-    # Custom text with the desired formatting
-    text = "╭───[ ꜱᴇᴛᴛɪɴɢꜱ ]───〄\n"
-    text += "│\n"
-    text += f"│ ᴛʜᴜᴍʙ sᴛᴀᴛᴜs : {'✅' if thumb else '❌'}\n"
-    text += f"│ ᴄᴀᴘᴛɪᴏɴ ᴍᴏᴅᴇ : {'✅' if caption else '❌'}\n"
-    text += "│\n"
-    text += "╰───────────⍟\n\n"
+    text = "**╭───[ ꜱᴇᴛᴛɪɴɢꜱ ]───〄**\n"
+    text += "**│**\n"
+    text += f"**│ ᴛʜᴜᴍʙ sᴛᴀᴛᴜs : {'✅' if thumb else '❌'}**\n"
+    text += f"**│ ᴄᴀᴘᴛɪᴏɴ ᴍᴏᴅᴇ : {'✅' if caption else '❌'}**\n"
+    text += "**│**\n"
+    text += "**╰───────────⍟**\n\n"
     text += "🔽 **Use the buttons below to manage your settings.**"
 
     return text
@@ -41,15 +39,12 @@ async def settings_menu(client, message):
          InlineKeyboardButton("🗑 Delete Caption", callback_data="del_caption")]
     ]
 
-    # Send the settings menu with the picture
-    if Setting_pic:
-        await client.send_photo(
-            chat_id=message.chat.id,
-            photo=Setting_pic,
-            caption=text,
-            reply_markup=InlineKeyboardMarkup(buttons))
-    else:
-        await message.reply_text(text, reply_markup=InlineKeyboardMarkup(buttons))
+    await client.send_photo(
+        chat_id=message.chat.id,
+        photo=Setting_pic,
+        caption=text,
+        reply_markup=InlineKeyboardMarkup(buttons)
+    )
 
 
 @Client.on_callback_query(filters.regex("^set_thumb$"))
@@ -59,33 +54,15 @@ async def set_thumbnail(client: Client, query: CallbackQuery):
 
     await query.message.edit_text("📷 **Send me a thumbnail image**")
 
-    thumb = await client.ask(query.message.chat.id, "📷 **Send a thumbnail image:**")
-    if thumb.media and thumb.media == enums.MessageMediaType.PHOTO:
-        await db.set_thumbnail(query.from_user.id, file_id=thumb.photo.file_id)
-        await query.message.edit_text("✅ **Thumbnail saved successfully!**", reply_markup=InlineKeyboardMarkup([
-            [InlineKeyboardButton("🔙 Back", callback_data="settings")]
-        ]))
-    else:
-        await query.message.edit_text("❌ **Invalid file! Please send an image.**", reply_markup=InlineKeyboardMarkup([
-            [InlineKeyboardButton("🔙 Back", callback_data="settings")]
-        ]))
+    thumb = await client.listen(query.message.chat.id, filters=filters.photo)
+    await db.set_thumbnail(query.from_user.id, file_id=thumb.photo.file_id)
 
+    # Delete user-sent message (Thumbnail)
+    await thumb.delete()
 
-@Client.on_callback_query(filters.regex("^show_thumb$"))
-async def show_thumbnail(client: Client, query: CallbackQuery):
-    if not RENAME_MODE:
-        return
-
-    thumb = await db.get_thumbnail(query.from_user.id)
-    if thumb:
-        await client.send_photo(
-            chat_id=query.message.chat.id,
-            photo=thumb,
-            caption="🖼 **Your Thumbnail**",
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back", callback_data="settings")]])
-        )
-    else:
-        await query.answer("😔 No thumbnail found!", show_alert=True)
+    await query.message.edit_text("✅ **Thumbnail saved successfully!**", reply_markup=InlineKeyboardMarkup([
+        [InlineKeyboardButton("🔙 Back", callback_data="settings")]
+    ]))
 
 
 @Client.on_callback_query(filters.regex("^del_thumb$"))
@@ -97,7 +74,7 @@ async def delete_thumbnail(client: Client, query: CallbackQuery):
     if not thumb:
         return await query.answer("No thumbnail found! ❌", show_alert=True)
 
-    await db.get_thumbnail(query.from_user.id, file_id=None)
+    await db.set_thumbnail(query.from_user.id, file_id=None)
     await query.message.edit_text("✅ **Thumbnail deleted successfully!**", reply_markup=InlineKeyboardMarkup([
         [InlineKeyboardButton("🔙 Back", callback_data="settings")]
     ]))
@@ -113,29 +90,18 @@ async def set_caption(client: Client, query: CallbackQuery):
         "📂 **Available Fillings:**\n"
         "📂 File Name: `{filename}`\n"
         "💾 Size: `{filesize}`\n"
-        "⏰ Duration: `{duration}`",
-        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back", callback_data="settings")]])
+        "⏰ Duration: `{duration}`"
     )
 
-    caption = await client.ask(query.message.chat.id, "✏ **Enter your caption:**")
+    caption = await client.listen(query.message.chat.id, filters=filters.text)
     await db.set_caption(query.from_user.id, caption=caption.text)
+
+    # Delete user-sent message (Caption)
+    await caption.delete()
+
     await query.message.edit_text("✅ **Caption saved successfully!**", reply_markup=InlineKeyboardMarkup([
         [InlineKeyboardButton("🔙 Back", callback_data="settings")]
     ]))
-
-
-@Client.on_callback_query(filters.regex("^see_caption$"))
-async def see_caption(client: Client, query: CallbackQuery):
-    if not RENAME_MODE:
-        return
-
-    caption = await db.get_caption(query.from_user.id)
-    if caption:
-        await query.message.edit_text(f"📄 **Your Caption:**\n\n`{caption}`", reply_markup=InlineKeyboardMarkup([
-            [InlineKeyboardButton("🔙 Back", callback_data="settings")]
-        ]))
-    else:
-        await query.answer("No caption found! ❌", show_alert=True)
 
 
 @Client.on_callback_query(filters.regex("^del_caption$"))
@@ -171,13 +137,5 @@ async def back_to_settings(client: Client, query: CallbackQuery):
          InlineKeyboardButton("🗑 Delete Caption", callback_data="del_caption")]
     ]
 
-    # Send the settings menu with the picture
-    if Setting_pic:
-        await client.send_photo(
-            chat_id=query.message.chat.id,
-            photo=Setting_pic,
-            caption=text,
-            reply_markup=InlineKeyboardMarkup(buttons))
-    else:
-        await query.message.edit_text(text, reply_markup=InlineKeyboardMarkup(buttons))
+    await query.message.edit_caption(text, reply_markup=InlineKeyboardMarkup(buttons))
 
