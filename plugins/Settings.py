@@ -2,10 +2,6 @@ from pyrogram import Client, filters, enums
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from helper.database import db
 from config import RENAME_MODE
-from PIL import Image
-import os
-import asyncio
-
 
 Setting_pic = "https://telegra.ph/file/e292b12890b8b4b9dcbd1.jpg"  # Replace with your file ID or URL
 
