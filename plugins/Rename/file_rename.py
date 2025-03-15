@@ -33,6 +33,7 @@ async def rename_start(client, message):
             text=f"**Please Enter New Filename...**\n\n**Old File Name**: `{filename}`\n\n**Old File Size**: `{filesize}`",
             reply_to_message_id=msg.id,
             reply_markup=ForceReply(True)
+        )
         
         kk = await client.listen(message.chat.id, timeout=30)
         if kk.text:
