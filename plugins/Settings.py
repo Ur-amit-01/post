@@ -2,7 +2,6 @@ from pyrogram import Client, filters, enums
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from helper.database import db
 from config import RENAME_MODE
-from plugins.start import cb_handler
 
 # Variable for the settings page picture
 Setting_pic = "https://telegra.ph/file/e292b12890b8b4b9dcbd1.jpg"  # Replace with your file ID or URL
@@ -36,8 +35,7 @@ async def settings_menu(client, message):
          InlineKeyboardButton("❌ Delete Thumbnail", callback_data="del_thumb")],
         [InlineKeyboardButton("✏️ Set Caption", callback_data="set_caption")],
         [InlineKeyboardButton("📄 View Caption", callback_data="see_caption"),
-         InlineKeyboardButton("🗑 Delete Caption", callback_data="del_caption")],
-        [InlineKeyboardButton("◀️ 𝙱𝙰𝙲𝙺", callback_data="help")]
+         InlineKeyboardButton("🗑 Delete Caption", callback_data="del_caption")]
     ]
 
     # Send the settings menu with the picture
@@ -182,8 +180,7 @@ async def back_to_settings(client: Client, query: CallbackQuery):
          InlineKeyboardButton("❌ Delete Thumbnail", callback_data="del_thumb")],
         [InlineKeyboardButton("✏️ Set Caption", callback_data="set_caption")],
         [InlineKeyboardButton("📄 View Caption", callback_data="see_caption"),
-         InlineKeyboardButton("🗑 Delete Caption", callback_data="del_caption")],
-        [InlineKeyboardButton("◀️ 𝙱𝙰𝙲𝙺", callback_data="help")]
+         InlineKeyboardButton("🗑 Delete Caption", callback_data="del_caption")]
     ]
 
     # Edit the message to show the settings menu
