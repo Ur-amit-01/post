@@ -1,19 +1,24 @@
 import motor.motor_asyncio
-from config import DB_URL, DB_NAME
+from config import *
 
 class Database:
 
     def __init__(self, uri, database_name):
         self._client = motor.motor_asyncio.AsyncIOMotorClient(uri)
-        self.db = self._client[database_name]
-        self.users = self.db.user  # Collection for users
-        self.channels = self.db.channels  # Collection for channels
+        self.jishubotz = self._client[database_name]
+        self.col = self.jishubotz.user
+        self.channels = self.jishubotz.channels  # Collection for channels
+        self.formatting = self.jishubotz.formatting  # Collection for formatting templates
 
     def new_user(self, id):
         return dict(
-            _id=int(id),
+            _id=int(id),                                   
             file_id=None,
-            caption=None
+            caption=None,
+            prefix=None,
+            suffix=None,
+            metadata=False,
+            metadata_code="By :- @Madflix_Bots"
         )
 
     async def add_user(self, b, m):
@@ -124,4 +129,3 @@ class Database:
 
 # Initialize the database
 db = Database(DB_URL, DB_NAME)
-
