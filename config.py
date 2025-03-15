@@ -25,23 +25,3 @@ LOG_CHANNEL = int(os.environ.get("LOG_CHANNEL", "-1002027394591"))
 
 REACTIONS = ["🤝", "😇", "🤗", "😍", "🎅", "🥰", "🤩", "😘", "😛", "😈", "🎉", "🫡", "😎", "🔥", "🤭", "🌚", "🆒", "👻", "😁"] #don't add any emoji because tg not support all emoji reactions
 
-
-
-class Txt(object):
-    # part of text configuration
-
-    PROGRESS_BAR = """\n
- <b>🔗 Size :</b> {1} | {2}
-️ <b>⏳️ Done :</b> {0}%
- <b>🚀 Speed :</b> {3}/s
-️ <b>⏰️ ETA :</b> {4}
-"""
-
-
-    SEND_METADATA = """<b><u>🖼️  HOW TO SET CUSTOM METADATA</u></b>
-
-For Example :-
-
-<code>By :- @Stellar_Bots</code>
-
-"""
