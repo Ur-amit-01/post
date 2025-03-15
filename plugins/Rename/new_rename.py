@@ -11,7 +11,7 @@ from helper.database import db
 from asyncio import sleep
 from PIL import Image
 import os, time, re, random, asyncio
-
+from plugins.Fsub import auth_check
 
 @Client.on_message(filters.private & filters.command("rename"))
 @auth_check
