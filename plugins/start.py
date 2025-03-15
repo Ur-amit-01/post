@@ -23,12 +23,12 @@ async def start(client, message):
     
     txt = (
         f"> **✨👋🏻 Hey {message.from_user.mention} !!**\n\n"
-        f"**🔋 I am an advanced bot designed to assist you. I can merge PDFs/images, rename your files, and much more.**\n\n"
-        f"**🔘 Click on the help button to learn more about my functions!**\n\n"
-        f"> **Developer 🧑🏻‍💻 :- @Axa_bachha**"
+        f"**🔋 ɪ ᴀᴍ ᴀɴ ᴀᴅᴠᴀɴᴄᴇ ʙᴏᴛ ᴅᴇꜱɪɢɴᴇᴅ ᴛᴏ ᴀꜱꜱɪꜱᴛ ʏᴏᴜ. ɪ ᴄᴀɴ ᴍᴇʀɢᴇ ᴘᴅꜰ/ɪᴍᴀɢᴇꜱ , ʀᴇɴᴀᴍᴇ ʏᴏᴜʀ ꜰɪʟᴇꜱ ᴀɴᴅ ᴍᴜᴄʜ ᴍᴏʀᴇ.**\n\n"
+        f"**🔘 ᴄʟɪᴄᴋ ᴏɴ ʜᴇʟᴘ ʙᴜᴛᴛᴏɴ ᴛᴏ ʟᴇᴀʀɴ ᴍᴏʀᴇ ᴀʙᴏᴜᴛ ᴍʏ ғᴜɴᴄᴛɪᴏɴs!**\n\n"
+        f"> **ᴅᴇᴠᴇʟᴏᴘᴇʀ 🧑🏻‍💻 :- @Axa_bachha**"
     )
     button = InlineKeyboardMarkup([
-        [InlineKeyboardButton('📜 About', callback_data='about'), InlineKeyboardButton('🕵🏻‍♀️ Help', callback_data='help')]
+        [InlineKeyboardButton('📜 ᴀʙᴏᴜᴛ', callback_data='about'), InlineKeyboardButton('🕵🏻‍♀️ ʜᴇʟᴘ', callback_data='help')]
     ])
     if START_PIC:
         await message.reply_photo(START_PIC, caption=txt, reply_markup=button)
@@ -61,43 +61,41 @@ async def cb_handler(client: Client, query: CallbackQuery):
     if data == "start":
         txt = (
             f"> **✨👋🏻 Hey {query.from_user.mention} !!**\n\n"
-            f"**🔋 I am an advanced bot designed to assist you. I can merge PDFs/images, rename your files, and much more.**\n\n"
-            f"**🔘 Click on the help button to learn more about my functions!**\n\n"
-            f"> **Developer 🧑🏻‍💻 :- @Axa_bachha**"
+            f"**🔋 ɪ ᴀᴍ ᴀɴ ᴀᴅᴠᴀɴᴄᴇ ʙᴏᴛ ᴅᴇꜱɪɢɴᴇᴅ ᴛᴏ ᴀꜱꜱɪꜱᴛ ʏᴏᴜ. ɪ ᴄᴀɴ ᴍᴇʀɢᴇ ᴘᴅꜰ/ɪᴍᴀɢᴇꜱ , ʀᴇɴᴀᴍᴇ ʏᴏᴜʀ ꜰɪʟᴇꜱ ᴀɴᴅ ᴍᴜᴄʜ ᴍᴏʀᴇ.**\n\n"
+            f"**🔘 ᴄʟɪᴄᴋ ᴏɴ ʜᴇʟᴘ ʙᴜᴛᴛᴏɴ ᴛᴏ ʟᴇᴀʀɴ ᴍᴏʀᴇ ᴀʙᴏᴜᴛ ᴍʏ ғᴜɴᴄᴛɪᴏɴs!**\n\n"
+            f"> **ᴅᴇᴠᴇʟᴏᴘᴇʀ 🧑🏻‍💻 :- @Axa_bachha**"
         )
         
         reply_markup = InlineKeyboardMarkup([
-            [InlineKeyboardButton("🤖 Developer", url='https://t.me/axa_bachha')],
-            [InlineKeyboardButton('📜 About', callback_data='about'),
-             InlineKeyboardButton('🕵🏻‍♀️ Help', callback_data='help')]
+            [InlineKeyboardButton('📜 ᴀʙᴏᴜᴛ', callback_data='about'),
+             InlineKeyboardButton('🕵🏻‍♀️ ʜᴇʟᴘ', callback_data='help')]
         ])
 
     elif data == "help":
         txt = HELP_TXT
         reply_markup = InlineKeyboardMarkup([
-            [InlineKeyboardButton("Contact Developer 🕵🏻‍♀️", url="https://t.me/axa_bachha")],
-            [InlineKeyboardButton("Request Acceptor", callback_data="request"),
-             InlineKeyboardButton("Merge 📄", callback_data="merger")],
-            [InlineKeyboardButton("Restricted Content Saver", callback_data="restricted")],
-            [InlineKeyboardButton('Telegraph', callback_data='tele'),
-             InlineKeyboardButton('Sticker-ID', callback_data='sticker')],
-            [InlineKeyboardButton('File Rename ✍🏻📃', callback_data='rename')],
-            [InlineKeyboardButton('🏠 Home 🏠', callback_data='start')]
+            [InlineKeyboardButton("ʀᴇᴏ̨ᴜᴇsᴛ ᴀᴄᴄᴇᴘᴛᴏʀ", callback_data="request"),
+             InlineKeyboardButton("ᴍᴇʀɢᴇ 📄", callback_data="merger")],
+            [InlineKeyboardButton("ʀᴇsᴛʀɪᴄᴛᴇᴅ ᴄᴏɴᴛᴇɴᴛ sᴀᴠᴇʀ", callback_data="restricted")],
+            [InlineKeyboardButton('ᴛᴇʟᴇɢʀᴀᴘʜ', callback_data='tele'),
+             InlineKeyboardButton('ꜱᴛɪᴄᴋᴇʀ-ɪᴅ', callback_data='sticker')],
+            [InlineKeyboardButton('ғɪʟᴇ ʀᴇɴᴀᴍᴇ ✍🏻📃', callback_data='rename')],
+            [InlineKeyboardButton('🏠 �𝙷𝙾𝙼𝙴 🏠', callback_data='start')]
         ])
 
     elif data == "about":
         txt = ABOUT_TXT.format(client.mention)
         reply_markup = InlineKeyboardMarkup([
-            [InlineKeyboardButton("🤖 Developer", url="https://t.me/axa_bachha")],
+            [InlineKeyboardButton("🤖 ᴅᴇᴠᴇʟᴏᴘᴇʀ", url="https://t.me/axa_bachha")],
             [InlineKeyboardButton("🔒 Close", callback_data="close"),
-             InlineKeyboardButton("🏠 Home 🏠", callback_data="start")]
+             InlineKeyboardButton("🏠 𝙷𝙾𝙼𝙴 🏠", callback_data="start")]
         ])
 
     elif data == "rename":
         await query.message.edit_text(
             text=Rename_TXT,
             reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("◀️ Back", callback_data="help")]
+                [InlineKeyboardButton("◀️ 𝙱𝙰𝙲𝙺", callback_data="help")]
             ])
         )
 
@@ -112,31 +110,31 @@ async def cb_handler(client: Client, query: CallbackQuery):
     elif data == "sticker":
         txt = STICKER_TXT
         reply_markup = InlineKeyboardMarkup([
-            [InlineKeyboardButton("◀️ Back", callback_data="help")]
+            [InlineKeyboardButton("◀️ 𝙱𝙰𝙲𝙺", callback_data="help")]
         ])
 
     elif data == "tele":
         txt = TELEGRAPH_TXT
         reply_markup = InlineKeyboardMarkup([
-            [InlineKeyboardButton("◀️ Back", callback_data="help")]
+            [InlineKeyboardButton("◀️ 𝙱𝙰𝙲𝙺", callback_data="help")]
         ])
 
     elif data == "restricted":
         txt = RESTRICTED_TXT
         reply_markup = InlineKeyboardMarkup([
-            [InlineKeyboardButton("◀️ Back", callback_data="help")]
+            [InlineKeyboardButton("◀️ 𝙱𝙰𝙲𝙺", callback_data="help")]
         ])
 
     elif data == "merger":
         txt = MERGER_TXT
         reply_markup = InlineKeyboardMarkup([
-            [InlineKeyboardButton("◀️ Back", callback_data="help")]
+            [InlineKeyboardButton("◀️ 𝙱𝙰𝙲𝙺", callback_data="help")]
         ])
 
     elif data == "request":
         txt = REQUEST_TXT
         reply_markup = InlineKeyboardMarkup([
-            [InlineKeyboardButton("◀️ Back", callback_data="help")]
+            [InlineKeyboardButton("◀️ 𝙱𝙰𝙲𝙺", callback_data="help")]
         ])
 
     await query.message.edit_text(text=txt, reply_markup=reply_markup, disable_web_page_preview=True)
@@ -145,9 +143,9 @@ async def cb_handler(client: Client, query: CallbackQuery):
 # ========================================= TEXTS =============================================
 
 LOG_TEXT = """<blockquote><b>#NewUser ॥ @z900_Robot</b></blockquote>
-<blockquote><b>☃️ Name :~ {}
+<blockquote><b>☃️ Nᴀᴍᴇ :~ {}
 🪪 ID :~ <code>{}</code>
-👨‍👨‍👦‍👦 Total :~ {}</b></blockquote>"""
+👨‍👨‍👦‍👦 ᴛᴏᴛᴀʟ :~ {}</b></blockquote>"""
 
 PROGRESS_BAR = """
 ╭━━━━❰ Gangster Hacking... ❱━➣
@@ -158,91 +156,99 @@ PROGRESS_BAR = """
 ╰━━━━━━━━━━━━━━━➣ """
 
 ABOUT_TXT = """
-<b>
-╭───────────⍟
-├➢ Myself : {}
-├➢ Owner : <a href=https://t.me/axa_bachha>𝐻𝑜𝑚𝑜 𝑠𝑎𝑝𝑖𝑒𝑛『❅』</a> 
-├➢ Library : <a href=https://github.com/pyrogram>Pyrogram</a>
-├➢ Language : <a href=https://www.python.org>Python 3</a>
-├➢ Database : <a href=https://cloud.mongodb.com>MongoDB</a>
-├➢ Server : <a href=https://apps.koyeb.com>Koyeb</a>
-├➢ Build Status : Python v3.6.8              
+<b>╭───────────⍟
+├➢ ᴍʏꜱᴇʟꜰ : {}
+├➢ ᴏᴡɴᴇʀ : <a href=https://t.me/axa_bachha>𝐻𝑜𝑚𝑜 𝑠𝑎𝑝𝑖𝑒𝑛『❅』</a>
+├➢ ʟɪʙʀᴀʀʏ : <a href=https://github.com/pyrogram>ᴘʏʀᴏɢʀᴀᴍ</a>
+├➢ ʟᴀɴɢᴜᴀɢᴇ : <a href=https://www.python.org>ᴘʏᴛʜᴏɴ 3</a>
+├➢ ᴅᴀᴛᴀʙᴀꜱᴇ : <a href=https://cloud.mongodb.com>MᴏɴɢᴏDB</a>
+├➢ ꜱᴇʀᴠᴇʀ : <a href=https://apps.koyeb.com>ᴋᴏʏᴇʙ</a>
+├➢ ʙᴜɪʟᴅ ꜱᴛᴀᴛᴜꜱ  : ᴘʏᴛʜᴏɴ v3.6.8
 ╰───────────────⍟
 
-➢ Note :- Please don't ask for the repo 🤡
-</b>
-"""
+➢ ɴᴏᴛᴇ :- ᴘʟᴢ ᴅᴏɴ'ᴛ ᴀꜱᴋ ꜰᴏʀ ʀᴇᴘᴏ 🤡
+</b>"""
 
 HELP_TXT = """
 🌌 <b><u>My Functions 👇🏻</u></b>
 """
 
 Rename_TXT = """
-<blockquote>✏️ <b><u>How to Rename a File</u></b></blockquote>
-•> /rename - After this command, send your file to rename.
-<blockquote>🌌 <b><u>How to Set Thumbnail</u></b></blockquote>
-•> /set_thumb - Send a picture to set the thumbnail.  
-•> /delthumb - Use this command to delete your old thumbnail.  
-•> /viewthumb - Use this command to view your current thumbnail.  
+<blockquote>✏️ <b><u>ʜᴏᴡ ᴛᴏ ʀᴇɴᴀᴍᴇ ᴀ ꜰɪʟᴇ</u></b></blockquote>
+•> /rename ᴀғᴛᴇʀ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ sᴇɴᴅ ʏᴏᴜʀ ғɪʟᴇ ᴛᴏ ʀᴇɴᴀᴍᴇ.
 
-<blockquote>📑 <b><u>How to Set Custom Caption</u></b></blockquote>
-•> /set_caption - Set a custom caption  
-•> /see_caption - See your custom caption  
-•> /del_caption - Delete custom caption  
+<blockquote>🌌 <b><u>ʜᴏᴡ ᴛᴏ ꜱᴇᴛ ᴛʜᴜᴍʙɴᴀɪʟ</u></b></blockquote>
+•> /set_thumb ꜱᴇɴᴅ ᴘɪᴄᴛᴜʀᴇ ᴛᴏ ꜱᴇᴛ ᴛʜᴜᴍʙɴᴀɪʟ.
+•> /del_thumb ᴜꜱᴇ ᴛʜɪꜱ ᴄᴏᴍᴍᴀɴᴅ ᴀɴᴅ ᴅᴇʟᴇᴛᴇ ʏᴏᴜʀ ᴏʟᴅ ᴛʜᴜᴍʙɴᴀɪʟ.
+•> /view_thumb ᴜꜱᴇ ᴛʜɪꜱ ᴄᴏᴍᴍᴀɴᴅ ᴛᴏ ᴠɪᴇᴡ ʏᴏᴜʀ ᴄᴜʀʀᴇɴᴛ ᴛʜᴜᴍʙɴᴀɪʟ.
 
-Example:- /set_caption 📕 File Name: {filename}  
-💾 Size: `{filesize}`  
-⏰ Duration: `{duration}`
+<blockquote>📑 <b><u>ʜᴏᴡ ᴛᴏ ꜱᴇᴛ ᴄᴜꜱᴛᴏᴍ ᴄᴀᴘᴛɪᴏɴ</u></b></blockquote>
+•> /set_caption - ꜱᴇᴛ ᴀ ᴄᴜꜱᴛᴏᴍ ᴄᴀᴘᴛɪᴏɴ
+•> /see_caption - ꜱᴇᴇ ʏᴏᴜʀ ᴄᴜꜱᴛᴏᴍ ᴄᴀᴘᴛɪᴏɴ
+•> /del_caption - ᴅᴇʟᴇᴛᴇ ᴄᴜꜱᴛᴏᴍ ᴄᴀᴘᴛɪᴏɴ
+
+ᴇxᴀᴍᴘʟᴇ:- /set_caption 📕 ꜰɪʟᴇ ɴᴀᴍᴇ: {ꜰɪʟᴇɴᴀᴍᴇ}
+💾 ꜱɪᴢᴇ: {filesize}
+⏰ ᴅᴜʀᴀᴛɪᴏɴ: {duration}
 """
 
 STICKER_TXT = """
-<b>
-⚝ Command : /stickerid
+<b>⚝ ᴄᴏᴍᴍᴀɴᴅ : /stickerid
 
-Use this command to find any sticker ID. (For developers) 👨🏻‍💻
-</b>
-"""
+ᴜꜱᴇ ᴛʜɪꜱ ᴄᴏᴍᴍᴀɴᴅ ᴛᴏ ꜰɪɴᴅ ᴀɴʏ ꜱᴛɪᴄᴋᴇʀ ɪᴅ. (Fᴏʀ ᴅᴇᴠᴇʟᴏᴘᴇʀs) 👨🏻‍💻
+</b>"""
 
 TELEGRAPH_TXT = """
-<b>
-⚝ Usage : /telegraph
+<b>⚝ ᴜꜱᴀɢᴇ : /telegraph
 
-Reply with /telegraph on a picture or video under (5MB) to get a link like this 👇🏻
+ʀᴇᴘʟʏ ᴡɪᴛʜ /telegraph ᴏɴ ᴀ �ᴘɪᴄᴛᴜʀᴇ ᴏʀ ᴠɪᴅᴇᴏ ᴜɴᴅᴇʀ (5ᴍʙ) ᴛᴏ ɢᴇᴛ ᴀ ʟɪɴᴋ ʟɪᴋᴇ ᴛʜɪs 👇🏻
 
 https://envs.sh/Fyw.jpg
-</b>
-"""
+</b>"""
 
 RESTRICTED_TXT = """
->💡 **Restricted Content Saver**                
-1. 🔒 **Private Chats**
-➥ Currently not working. 🙁
+<b>
+> 💡 Restricted Content Saver
 
-2. 🌐 **Public Chats**
+1. 🔒 Private Chats
+➥ For Owner Only :)
+
+2. 🌐 Public Chats
 ➥ Simply share the post link. I'll download it for you.
 
-3. 📂 **Batch Mode**
+3. 📂 Batch Mode
 ➥ Download multiple posts using this format:
 > https://t.me/xxxx/1001-1010
+</b>
 """
 
 MERGER_TXT = """
-> **📜 PDF Merging :**\n\n
-• /merge - Start merging process\n
-• Upload PDFs or Images in sequence\n
-• /done : Merge all PDFs\n\n
-> **⚠ Limitations : **\n
-• Max File Size: 500 MB\n
-• Max Files per Merge: 20\n\n
-> **✨ Customizations :**\n
-• Filename: Provide a custom name\n
+<b>
+> 📜 PDF Merging
+
+• /merge - Start merging process
+• Upload PDFs or Images in sequence
+• /done - Merge all PDFs
+
+> ⚠ Limitations
+• Max File Size: 350 MB
+• Max Files per Merge: 20
+
+> ✨ Customizations
+• Filename: Provide a custom name
 • Thumbnail: Use (Filename) -t (Thumbnail link)
+</b>
 """
 
 REQUEST_TXT = """
-> **⚙️ Join Request Acceptor**\n\n
-**• I can accept all pending join requests in your channel. **🤝\n\n
-**• Promote @Axa_bachha and @Z900_RoBot with full admin rights in your channel. **🔑\n\n
-**• Send /accept command in the channel to accept all requests at once. 💯**
+<b>
+> ⚙️ Join Request Acceptor
+
+• I can accept all pending join requests in your channel. 🤝
+
+• Promote @xDzod and @Z900_RoBot with full admin rights in your channel. 🔑
+
+• Send /accept command in the channel to accept all requests at once. 💯
+</b>
 """
 
