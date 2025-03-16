@@ -27,11 +27,7 @@ async def toggle_thumb(client, query: CallbackQuery):
 
     user_id = query.from_user.id
     thumb = await db.get_thumbnail(user_id)
-
-    if thumb:
-        # Do not delete the thumbnail, just toggle the status
-        await db.set_thumbnail(user_id, file_id=None)  # Delete thumbnail silently
-    else:
+    
         # Send the prompt message and wait for the user's response
         prompt_msg = await client.send_message(user_id, "**Send me your thumbnail**")
         thumb_msg = await client.listen(user_id)  # Wait for the user to send a thumbnail
@@ -50,10 +46,6 @@ async def toggle_caption(client, query: CallbackQuery):
     user_id = query.from_user.id
     caption = await db.get_caption(user_id)
 
-    if caption:
-        # Do not delete the caption, just toggle the status
-        await db.set_caption(user_id, caption=None)  # Delete caption silently
-    else:
         # Send the prompt message and wait for the user's response
         prompt_msg = await client.send_message(user_id, "**Give me a caption to set.**\n\nAvailable Fillings:\n📂 `{filename}`\n💾 `{filesize}`\n⏰ `{duration}`")
         caption_msg = await client.listen(user_id)  # Wait for the user to send a caption
