@@ -4,12 +4,20 @@ from helper.database import db
 from config import RENAME_MODE
 
 @Client.on_message(filters.private & filters.command("settings"))
-async def settings(client, message):
+async def open_settings(client, message):
     if RENAME_MODE == False:
         return
 
     user_id = message.from_user.id
     await update_settings_message(client, message, user_id, new_message=True)
+
+@Client.on_callback_query(filters.regex("^settings$"))
+async def callback_settings(client, query):
+    if RENAME_MODE == False:
+        return
+
+    user_id = query.from_user.id
+    await update_settings_message(client, query.message, user_id)
 
 @Client.on_callback_query(filters.regex("toggle_thumb"))
 async def toggle_thumb(client, query: CallbackQuery):
