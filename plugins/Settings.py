@@ -20,19 +20,20 @@ async def callback_settings(client, query):
     user_id = query.from_user.id
     await update_settings_message(client, query.message, user_id)
 
-@Client.on_callback_query(filters.regex("toggle_caption"))
-async def toggle_caption(client, query: CallbackQuery):
+@Client.on_callback_query(filters.regex("toggle_thumb"))
+async def toggle_thumb(client, query: CallbackQuery):
     if RENAME_MODE == False:
         return
 
     user_id = query.from_user.id
 
     # Send the prompt message and wait for the user's response
-    prompt_msg = await client.send_message(user_id, "**Give me a caption to set.**\n\nAvailable Fillings:\n📂 `{filename}`\n💾 `{filesize}`\n⏰ `{duration}`")
-    caption_msg = await client.listen(user_id)  # Wait for the user to send a caption
-    await db.set_caption(user_id, caption=caption_msg.text)
-    await caption_msg.delete()  # Delete the received caption message
-    await prompt_msg.delete()  # Delete the prompt message
+    prompt_msg = await client.send_message(user_id, "**Send me your thumbnail**")
+    thumb_msg = await client.listen(user_id)  # Wait for the user to send a thumbnail
+    if thumb_msg.photo:
+        await db.set_thumbnail(user_id, file_id=thumb_msg.photo.file_id)
+        await thumb_msg.delete()  # Delete the received thumbnail message
+        await prompt_msg.delete()  # Delete the prompt message
 
     await update_settings_message(client, query.message, user_id)
 
