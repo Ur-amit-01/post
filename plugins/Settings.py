@@ -130,13 +130,15 @@ async def update_settings_message(client, message, user_id, new_message=False):
         [InlineKeyboardButton(f"📝 Caption: {caption_status}", callback_data="toggle_caption")],
         [InlineKeyboardButton("👀 See Caption", callback_data="see_caption"),
          InlineKeyboardButton("🗑 Delete", callback_data="delete_caption")],
-        [InlineKeyboardButton("◀️ 𝙱𝙰𝙲𝙺", callback_data="start")]
+        [InlineKeyboardButton("🏠 Home", callback_data="start")]
     ])
 
     text = (
         "**╭────[ꜱᴇᴛᴛɪɴɢꜱ]────〄**\n"
-        f"**│ ᴛʜᴜᴍʙ sᴛᴀᴛᴜꜱ : {thumb_status}**\n"
-        f"**│ ᴄᴀᴘᴛɪᴏɴ ᴍᴏᴅᴇ : {caption_status}**\n"
+        "**│⋗ ꜰᴏʀ ᴍᴇʀɢᴇᴅ ᴏʀ ʀᴇɴᴀᴍᴇᴅ ꜰɪʟᴇꜱ**\n"
+        "**│**\n"
+        f"**│• ᴛʜᴜᴍʙ sᴛᴀᴛᴜs : {thumb_status}**\n"
+        f"**│• ᴄᴀᴘᴛɪᴏɴ ᴍᴏᴅᴇ : {caption_status}**\n"
         "**╰─────────────⍟**"
     )
 
