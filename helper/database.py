@@ -5,10 +5,10 @@ class Database:
 
     def __init__(self, uri, database_name):
         self._client = motor.motor_asyncio.AsyncIOMotorClient(uri)
-        self.jishubotz = self._client[database_name]
-        self.col = self.jishubotz.user
-        self.channels = self.jishubotz.channels  # Collection for channels
-        self.formatting = self.jishubotz.formatting  # Collection for formatting templates
+        self.db = self._client[database_name]
+        self.col = self.db.user
+        self.channels = self.db.channels  # Collection for channels
+        self.formatting = self.db.formatting  # Collection for formatting templates
 
     def new_user(self, id):
         return dict(
