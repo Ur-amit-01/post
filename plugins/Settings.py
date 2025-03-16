@@ -114,7 +114,7 @@ async def update_settings_message(client, message, user_id, new_message=False):
         [InlineKeyboardButton(f"📝 Caption: {caption_status}", callback_data="toggle_caption"),
          InlineKeyboardButton("👀 See", callback_data="see_caption"),
          InlineKeyboardButton("🗑 Delete", callback_data="delete_caption")],
-        [InlineKeyboardButton("❌ Close", callback_data="close")]
+        [InlineKeyboardButton("❌ Close", callback_data="start")]
     ])
 
     text = (
