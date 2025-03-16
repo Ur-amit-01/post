@@ -35,7 +35,7 @@ async def toggle_caption(client, query: CallbackQuery):
     await prompt_msg.delete()  # Delete the prompt message
 
     await update_settings_message(client, query.message, user_id)
-    
+
 @Client.on_callback_query(filters.regex("toggle_caption"))
 async def toggle_caption(client, query: CallbackQuery):
     if RENAME_MODE == False:
@@ -44,12 +44,12 @@ async def toggle_caption(client, query: CallbackQuery):
     user_id = query.from_user.id
     caption = await db.get_caption(user_id)
 
-        # Send the prompt message and wait for the user's response
-        prompt_msg = await client.send_message(user_id, "**Give me a caption to set.**\n\nAvailable Fillings:\n📂 `{filename}`\n💾 `{filesize}`\n⏰ `{duration}`")
-        caption_msg = await client.listen(user_id)  # Wait for the user to send a caption
-        await db.set_caption(user_id, caption=caption_msg.text)
-        await caption_msg.delete()  # Delete the received caption message
-        await prompt_msg.delete()  # Delete the prompt message
+    # Send the prompt message and wait for the user's response
+    prompt_msg = await client.send_message(user_id, "**Give me a caption to set.**\n\nAvailable Fillings:\n📂 `{filename}`\n💾 `{filesize}`\n⏰ `{duration}`")
+    caption_msg = await client.listen(user_id)  # Wait for the user to send a caption
+    await db.set_caption(user_id, caption=caption_msg.text)
+    await caption_msg.delete()  # Delete the received caption message
+    await prompt_msg.delete()  # Delete the prompt message
 
     await update_settings_message(client, query.message, user_id)
 
