@@ -2,6 +2,7 @@ from pyrogram import Client, filters, enums
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from helper.database import db
 from config import RENAME_MODE
+import asyncio
 
 @Client.on_message(filters.private & filters.command("settings"))
 async def open_settings(client, message):
@@ -33,6 +34,8 @@ async def toggle_thumb(client, query: CallbackQuery):
         thumb_msg = await client.ask(user_id, "**Send me your thumbnail**")
         if thumb_msg.photo:
             await db.set_thumbnail(user_id, file_id=thumb_msg.photo.file_id)
+            await thumb_msg.delete()  # Delete the received thumbnail message
+            await query.message.delete()  # Delete the prompt message
 
     await update_settings_message(client, query.message, user_id)
 
@@ -49,6 +52,8 @@ async def toggle_caption(client, query: CallbackQuery):
     else:
         caption_msg = await client.ask(user_id, "**Give me a caption to set.**\n\nAvailable Fillings:\n📂 `{filename}`\n💾 `{filesize}`\n⏰ `{duration}`")
         await db.set_caption(user_id, caption=caption_msg.text)
+        await caption_msg.delete()  # Delete the received caption message
+        await query.message.delete()  # Delete the prompt message
 
     await update_settings_message(client, query.message, user_id)
 
@@ -61,8 +66,11 @@ async def view_thumb(client, query: CallbackQuery):
     thumb = await db.get_thumbnail(user_id)
 
     if thumb:
-        await client.send_photo(chat_id=user_id, photo=thumb)
-    await query.answer()  # Silent response
+        sent_message = await client.send_photo(chat_id=user_id, photo=thumb)
+        await asyncio.sleep(10)  # Wait for 10 seconds
+        await sent_message.delete()  # Delete the sent thumbnail after 10 seconds
+    else:
+        await query.answer("**❌ No thumbnail found! ❌**", show_alert=True)
 
 @Client.on_callback_query(filters.regex("see_caption"))
 async def see_caption(client, query: CallbackQuery):
@@ -73,9 +81,11 @@ async def see_caption(client, query: CallbackQuery):
     caption = await db.get_caption(user_id)
 
     if caption:
-        await query.message.reply_text(f"**Your Caption:**\n\n`{caption}`")
+        sent_message = await query.message.reply_text(f"**Your Caption:**\n\n`{caption}`")
+        await asyncio.sleep(10)  # Wait for 10 seconds
+        await sent_message.delete()  # Delete the sent caption after 10 seconds
     else:
-        await query.answer("😔 No caption found!", show_alert=True)
+        await query.answer("**❌ No caption found! ❌**", show_alert=True)
 
 @Client.on_callback_query(filters.regex("delete_thumb"))
 async def delete_thumb(client, query: CallbackQuery):
@@ -83,8 +93,13 @@ async def delete_thumb(client, query: CallbackQuery):
         return
 
     user_id = query.from_user.id
-    await db.set_thumbnail(user_id, file_id=None)  # Delete thumbnail
-    await update_settings_message(client, query.message, user_id)  # Update UI silently
+    thumb = await db.get_thumbnail(user_id)
+
+    if thumb:
+        await db.set_thumbnail(user_id, file_id=None)  # Delete thumbnail
+        await update_settings_message(client, query.message, user_id)  # Update UI silently
+    else:
+        await query.answer("**❌ No thumbnail found! ❌**", show_alert=True)
 
 @Client.on_callback_query(filters.regex("delete_caption"))
 async def delete_caption(client, query: CallbackQuery):
@@ -92,8 +107,13 @@ async def delete_caption(client, query: CallbackQuery):
         return
 
     user_id = query.from_user.id
-    await db.set_caption(user_id, caption=None)  # Delete caption
-    await update_settings_message(client, query.message, user_id)  # Update UI silently
+    caption = await db.get_caption(user_id)
+
+    if caption:
+        await db.set_caption(user_id, caption=None)  # Delete caption
+        await update_settings_message(client, query.message, user_id)  # Update UI silently
+    else:
+        await query.answer("**❌ No caption found! ❌**", show_alert=True)
 
 @Client.on_callback_query(filters.regex("close"))
 async def close_settings(client, query: CallbackQuery):
@@ -108,13 +128,13 @@ async def update_settings_message(client, message, user_id, new_message=False):
     caption_status = "✅" if caption else "❌"
 
     keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton(f"🖼 Thumbnail: {thumb_status}", callback_data="toggle_thumb"),
-         InlineKeyboardButton("🔄 View", callback_data="view_thumb"),
+        [InlineKeyboardButton(f"🖼 Thumbnail: {thumb_status}", callback_data="toggle_thumb")],
+        [InlineKeyboardButton("👀 See thumb", callback_data="view_thumb"),
          InlineKeyboardButton("🗑 Delete", callback_data="delete_thumb")],
-        [InlineKeyboardButton(f"📝 Caption: {caption_status}", callback_data="toggle_caption"),
-         InlineKeyboardButton("👀 See", callback_data="see_caption"),
+        [InlineKeyboardButton(f"📝 Caption: {caption_status}", callback_data="toggle_caption")],
+        [InlineKeyboardButton("👀 See Caption", callback_data="see_caption"),
          InlineKeyboardButton("🗑 Delete", callback_data="delete_caption")],
-        [InlineKeyboardButton("❌ Close", callback_data="start")]
+        [InlineKeyboardButton("◀️ 𝙱𝙰𝙲𝙺", callback_data="start")]
     ])
 
     text = (
@@ -129,8 +149,6 @@ async def update_settings_message(client, message, user_id, new_message=False):
     else:
         await message.edit_text(text, reply_markup=keyboard)
 
-
-
 @Client.on_message(filters.private & filters.command(['set_thumb']))
 async def addthumbs(client, message):
     if RENAME_MODE == False:
@@ -138,7 +156,8 @@ async def addthumbs(client, message):
     thumb = await client.ask(message.chat.id, "**Send me your thumbnail**")
     if thumb.media and thumb.media == enums.MessageMediaType.PHOTO:
         await db.set_thumbnail(message.from_user.id, file_id=thumb.photo.file_id)
+        await thumb.delete()  # Delete the received thumbnail message
         await message.reply("**Thumbnail saved successfully ✅️**")
     else:
         await message.reply("**This is not a picture**")
-        
+
