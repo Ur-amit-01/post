@@ -29,13 +29,16 @@ async def toggle_thumb(client, query: CallbackQuery):
     thumb = await db.get_thumbnail(user_id)
 
     if thumb:
+        # Do not delete the thumbnail, just toggle the status
         await db.set_thumbnail(user_id, file_id=None)  # Delete thumbnail silently
     else:
-        thumb_msg = await client.ask(user_id, "**Send me your thumbnail**")
+        # Send the prompt message and wait for the user's response
+        prompt_msg = await client.send_message(user_id, "**Send me your thumbnail**")
+        thumb_msg = await client.listen(user_id)  # Wait for the user to send a thumbnail
         if thumb_msg.photo:
             await db.set_thumbnail(user_id, file_id=thumb_msg.photo.file_id)
             await thumb_msg.delete()  # Delete the received thumbnail message
-            await query.message.delete()  # Delete the prompt message
+            await prompt_msg.delete()  # Delete the prompt message
 
     await update_settings_message(client, query.message, user_id)
 
@@ -48,12 +51,15 @@ async def toggle_caption(client, query: CallbackQuery):
     caption = await db.get_caption(user_id)
 
     if caption:
+        # Do not delete the caption, just toggle the status
         await db.set_caption(user_id, caption=None)  # Delete caption silently
     else:
-        caption_msg = await client.ask(user_id, "**Give me a caption to set.**\n\nAvailable Fillings:\n📂 `{filename}`\n💾 `{filesize}`\n⏰ `{duration}`")
+        # Send the prompt message and wait for the user's response
+        prompt_msg = await client.send_message(user_id, "**Give me a caption to set.**\n\nAvailable Fillings:\n📂 `{filename}`\n💾 `{filesize}`\n⏰ `{duration}`")
+        caption_msg = await client.listen(user_id)  # Wait for the user to send a caption
         await db.set_caption(user_id, caption=caption_msg.text)
         await caption_msg.delete()  # Delete the received caption message
-        await query.message.delete()  # Delete the prompt message
+        await prompt_msg.delete()  # Delete the prompt message
 
     await update_settings_message(client, query.message, user_id)
 
@@ -153,10 +159,12 @@ async def update_settings_message(client, message, user_id, new_message=False):
 async def addthumbs(client, message):
     if RENAME_MODE == False:
         return 
-    thumb = await client.ask(message.chat.id, "**Send me your thumbnail**")
-    if thumb.media and thumb.media == enums.MessageMediaType.PHOTO:
-        await db.set_thumbnail(message.from_user.id, file_id=thumb.photo.file_id)
-        await thumb.delete()  # Delete the received thumbnail message
+    prompt_msg = await client.send_message(message.chat.id, "**Send me your thumbnail**")
+    thumb_msg = await client.listen(message.chat.id)  # Wait for the user to send a thumbnail
+    if thumb_msg.media and thumb_msg.media == enums.MessageMediaType.PHOTO:
+        await db.set_thumbnail(message.from_user.id, file_id=thumb_msg.photo.file_id)
+        await thumb_msg.delete()  # Delete the received thumbnail message
+        await prompt_msg.delete()  # Delete the prompt message
         await message.reply("**Thumbnail saved successfully ✅️**")
     else:
         await message.reply("**This is not a picture**")
