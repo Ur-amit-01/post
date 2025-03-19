@@ -1,4 +1,5 @@
 from pyrogram import Client, filters
+from pyrogram.types import Message
 from helper.database import db
 
 # Command to add the channel (Only works if sent in a channel)
