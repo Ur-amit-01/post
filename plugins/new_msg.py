@@ -60,9 +60,10 @@ async def handle_media(client, message: Message):
         await message.edit_caption(formatting_text)
 
 # Handle text messages in channels (excluding commands)
-@Client.on_message(filters.text & filters.channel & ~filters.command)
-async def format_message(client, message: Message):
+@Client.on_message(filters.channel)
+async def format_message(client, message):
     channel_id = message.chat.id
     if await db.is_channel_exist(channel_id):  # Check if channel is in the database
-        formatted_text = f"```\n{message.text}\n```"
-        await message.edit_text(formatted_text)  # Edit message with formatting
+        if message.text and not message.text.startswith("/"):  # Ignore commands
+            formatted_text = f"```\n{message.text}\n```"
+            await message.edit_text(formatted_text)  # Edit message with formatting
