@@ -35,7 +35,7 @@ async def format_message(client, message):
 
 #
 # Command: /set_caption
-@Client.on_message(filters.command("add_caption"))
+@Client.on_message(filters.command("add_caption") & filters.channel)
 async def set_caption(client, message: Message):
     if message.chat.type != "channel":
         await message.reply_text("This command can only be used in channels.")
@@ -53,7 +53,7 @@ async def set_caption(client, message: Message):
     await message.reply_text("**Caption formatting has been set for this channel.\nSend /rem_caption to stop this formatting.**")
 
 # Command: /rem_caption
-@Client.on_message(filters.command("rem_caption"))
+@Client.on_message(filters.command("rem_caption") & filters.channel)
 async def rem_caption(client, message: Message):
     if message.chat.type != "channel":
         await message.reply_text("This command can only be used in channels.")
