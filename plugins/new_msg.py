@@ -42,7 +42,7 @@ async def set_caption(client, message: Message):
         return
 
     channel_id = message.chat.id
-    caption = message.text.replace("/set_caption", "").strip()
+    caption = message.text.replace("/add_caption", "").strip()
 
     if not caption:
         await message.reply_text("Please provide a caption.")
@@ -50,10 +50,10 @@ async def set_caption(client, message: Message):
 
     # Save the caption in the database
     await db.save_formatting(channel_id, caption)
-    await message.reply_text("**Caption formatting has been set for this channel.\nSend /rem_caption to stop this formatting.**")
+    await message.reply_text("**Caption formatting has been set for this channel.\nSend /remove to stop this formatting.**")
 
 # Command: /rem_caption
-@Client.on_message(filters.command("rem_caption") & filters.channel)
+@Client.on_message(filters.command("remove") & filters.channel)
 async def rem_caption(client, message: Message):
     if message.chat.type != "channel":
         await message.reply_text("This command can only be used in channels.")
@@ -63,7 +63,7 @@ async def rem_caption(client, message: Message):
 
     # Remove the caption from the database
     await db.formatting.delete_one({"_id": channel_id})
-    await message.reply_text("Caption formatting has been removed for this channel.")
+    await message.reply_text("**Caption formatting has been removed for this channel.**")
 
 # Handle incoming media messages
 @Client.on_message(filters.media & filters.channel)
