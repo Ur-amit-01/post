@@ -31,43 +31,48 @@ async def format_message(client, message):
             formatted_text = f"```\n{message.text}\n```"
             await message.edit_text(formatted_text)  # Edit message with formatting
 
-# Save formatting when user sends /cap with a message
-@Client.on_message(filters.command("cap") & filters.channel)
-async def save_formatting(client, message):
 
-    # Check if the user provided any text after /cap
-    if len(message.command) < 2:
-        help_message = (
-            "**How to use /cap:**\n\n"
-            "To save a formatting template for media captions, use the following format:\n"
-            "/cap Your formatting text with `{filename}` and `{filecaption}`\n\n"
-            "**Example:**\n"
-            "/cap File: `{filename}`\nCaption: `{filecaption}`\n\n"
-            "This will save the formatting and apply it to all upcoming media files in this channel."
-        )
-        return await message.reply(help_message)
+#
+# Command: /set_caption
+@Client.on_message(filters.command("add_caption"))
+async def set_caption(client, message: Message):
+    if message.chat.type != "channel":
+        await message.reply_text("This command can only be used in channels.")
+        return
 
-    # Extract the formatting text from the /cap command
-    formatting_text = " ".join(message.command[1:])  # Extract text after /cap
-    await db.save_formatting(channel_id, formatting_text)  # Save formatting in the database
-    await message.reply("✅ Formatting saved! It will be applied to all upcoming media captions.")
-
-# Apply saved formatting to media captions
-@Client.on_message(filters.channel & (filters.document | filters.photo | filters.video | filters.audio))
-async def apply_formatting_to_media(client, message):
     channel_id = message.chat.id
-    if not await db.is_channel_exist(channel_id):
+    caption = message.text.replace("/set_caption", "").strip()
+
+    if not caption:
+        await message.reply_text("Please provide a caption.")
         return
 
-    # Get saved formatting from the database
-    formatting = await db.get_formatting(channel_id)
-    if not formatting:
+    # Save the caption in the database
+    await db.save_formatting(channel_id, caption)
+    await message.reply_text("**Caption formatting has been set for this channel.\nSend /rem_caption to stop this formatting.**")
+
+# Command: /rem_caption
+@Client.on_message(filters.command("rem_caption"))
+async def rem_caption(client, message: Message):
+    if message.chat.type != "channel":
+        await message.reply_text("This command can only be used in channels.")
         return
 
-    # Prepare caption with variables
-    filename = message.document.file_name if message.document else None
-    filecaption = message.caption if message.caption else ""
-    caption = formatting.format(filename=filename, filecaption=filecaption)
+    channel_id = message.chat.id
 
-    # Edit the media caption with the formatted text
-    await message.edit_caption(caption)
+    # Remove the caption from the database
+    await db.formatting.delete_one({"_id": channel_id})
+    await message.reply_text("Caption formatting has been removed for this channel.")
+
+# Handle incoming media messages
+@Client.on_message(filters.media & filters.channel)
+async def handle_media(client, message: Message):
+    channel_id = message.chat.id
+
+    # Retrieve the caption from the database
+    formatting_text = await db.get_formatting(channel_id)
+
+    if formatting_text:
+        # Apply the formatting to the media message
+        message.caption = formatting_text
+        await message.edit_caption(formatting_text)
