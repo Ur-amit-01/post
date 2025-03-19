@@ -2,9 +2,6 @@ from pyrogram import Client, filters
 from pyrogram.types import Message
 from helper.database import db
 
-# Initialize the bot client
-Client = Client("my_bot", bot_token="YOUR_BOT_TOKEN", api_id=YOUR_API_ID, api_hash="YOUR_API_HASH")
-
 # Command to add the channel (Only works if sent in a channel)
 @Client.on_message(filters.command("add") & filters.channel)
 async def add_channel(client, message: Message):
