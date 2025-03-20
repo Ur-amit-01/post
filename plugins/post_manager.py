@@ -5,16 +5,26 @@ from helper.database import db  # Assuming you have a database helper
 # Command to add a channel
 @Client.on_message(filters.command("addchannel") & filters.private)
 async def add_channel(client, message: Message):
+    # Debug: Print the entire message object
+    print(f"Message Object: {message}")
+
     # Check if the message is forwarded from a channel
-    if not message.forward_from_chat or message.forward_from_chat.type != "channel":
+    if not message.forward_from_chat:
         await message.reply("❌ Please forward a message from the channel you want to add.")
+        return
+
+    # Debug: Print the forwarded chat object
+    print(f"Forwarded Chat Object: {message.forward_from_chat}")
+
+    if message.forward_from_chat.type != "channel":
+        await message.reply("❌ The forwarded message must be from a channel.")
         return
 
     # Extract channel details
     channel_id = message.forward_from_chat.id
     channel_name = message.forward_from_chat.title
 
-    # Debugging: Print channel details
+    # Debug: Print channel details
     print(f"Channel ID: {channel_id}, Channel Name: {channel_name}")
 
     # Save the channel to the database
