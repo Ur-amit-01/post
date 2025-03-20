@@ -1,6 +1,7 @@
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from helper.database import db  # Assuming you have a database helper
+import time
 
 # Command to add the current channel to the database
 @Client.on_message(filters.command("add") & filters.channel)
@@ -72,6 +73,9 @@ async def send_post(client, message: Message):
     # Get all connected channels from the database
     channels = await db.get_all_channels()
 
+    # Generate a unique ID for this post (using timestamp)
+    post_id = str(int(time.time()))
+
     # Send the post to each channel
     sent_messages = {}
     for channel in channels:
@@ -86,18 +90,29 @@ async def send_post(client, message: Message):
         except Exception as e:
             print(f"Error sending post to channel {channel['_id']}: {e}")
 
-    # Save the sent message IDs in the database
-    await db.save_post_messages(sent_messages)
-    await message.reply("✅ Post sent to all connected channels!")
+    # Save the sent message IDs in the database with the unique post ID
+    await db.save_post_messages(post_id, sent_messages)
+    await message.reply(f"✅ Post sent to all connected channels!\n\n**Post ID:** `{post_id}`")
 
 # Command to delete the post from all channels
 @Client.on_message(filters.command("deletepost") & filters.private)
 async def delete_post(client, message: Message):
-    # Get the message IDs from the database
-    post_messages = await db.get_post_messages()
+    # Get the post ID from the command (if provided)
+    args = message.text.split(maxsplit=1)
+    post_id = args[1] if len(args) > 1 else None
+
+    if not post_id:
+        # If no post ID is provided, delete the most recent post
+        post_id = await db.get_most_recent_post_id()
+        if not post_id:
+            await message.reply("No posts have been sent yet.")
+            return
+
+    # Get the message IDs for the specified post ID
+    post_messages = await db.get_post_messages(post_id)
 
     if not post_messages:
-        await message.reply("No posts have been sent yet.")
+        await message.reply(f"❌ No posts found with ID: `{post_id}`")
         return
 
     # Delete the post from each channel
@@ -107,16 +122,29 @@ async def delete_post(client, message: Message):
         except Exception as e:
             print(f"Error deleting post from channel {channel_id}: {e}")
 
-    await message.reply("✅ Post deleted from all channels!")
+    # Remove the post from the database
+    await db.delete_post_messages(post_id)
+    await message.reply(f"✅ Post `{post_id}` deleted from all channels!")
 
 # Command to get detailed stats
 @Client.on_message(filters.command("stats") & filters.private)
 async def get_stats(client, message: Message):
-    # Get the post message IDs from the database
-    post_messages = await db.get_post_messages()
+    # Get the post ID from the command (if provided)
+    args = message.text.split(maxsplit=1)
+    post_id = args[1] if len(args) > 1 else None
+
+    if not post_id:
+        # If no post ID is provided, get stats for the most recent post
+        post_id = await db.get_most_recent_post_id()
+        if not post_id:
+            await message.reply("No posts have been sent yet.")
+            return
+
+    # Get the message IDs for the specified post ID
+    post_messages = await db.get_post_messages(post_id)
 
     if not post_messages:
-        await message.reply("No posts have been sent yet.")
+        await message.reply(f"❌ No posts found with ID: `{post_id}`")
         return
 
     # Calculate total views and prepare channel list
@@ -154,7 +182,7 @@ async def get_stats(client, message: Message):
 async def handle_callback_query(client, callback_query: CallbackQuery):
     if callback_query.data == "refresh_stats":
         # Get the updated stats
-        post_messages = await db.get_post_messages()
+        post_messages = await db.get_post_messages(post_id)
 
         total_views = 0
         channel_list = []
@@ -178,3 +206,4 @@ async def handle_callback_query(client, callback_query: CallbackQuery):
         # Update the message with the new stats
         await callback_query.message.edit_text(updated_message, reply_markup=callback_query.message.reply_markup)
         await callback_query.answer("Stats refreshed!")
+
