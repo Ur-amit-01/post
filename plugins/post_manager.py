@@ -50,7 +50,7 @@ async def list_channels(client, message: Message):
 
 
 # Command to post a message to all channels
-@app.on_message(filters.command("post") & filters.private & filters.reply)
+@Client.on_message(filters.command("post") & filters.private & filters.reply)
 def post_message_command(client: Client, message: Message):
     # Get the replied message
     replied_message = message.reply_to_message
@@ -72,7 +72,7 @@ def post_message_command(client: Client, message: Message):
     message.reply_text("✅ Message posted to all channels!")
 
 # Command to delete a message from all channels
-@app.on_message(filters.command("delete") & filters.private & filters.reply)
+@Client.on_message(filters.command("delete") & filters.private & filters.reply)
 def delete_message_command(client: Client, message: Message):
     # Get the replied message
     replied_message = message.reply_to_message
