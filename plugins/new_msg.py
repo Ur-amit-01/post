@@ -6,13 +6,22 @@ from helper.database import db
 @Client.on_message(filters.command("add") & filters.channel)
 async def add_channel(client, message: Message):
     channel_id = message.chat.id
-    added = await db.add_channel(channel_id)  # Using the new database function
+    formatting_text = message.text.replace("/add", "").strip()
+
+    if not formatting_text:
+        await message.reply("Please provide a formatting text with `{new_message}` as a placeholder.")
+        return
+    if "{new_message}" not in formatting_text:
+        await message.reply("The formatting text must include `{new_message}` as a placeholder.")
+        return
+    # Save the formatting text in the database
+    added = await db.add_channel(channel_id, formatting_text)  # Pass the formatting text to the database function
 
     if added:
-        await message.reply("✅ Channel added! Now, all messages will be formatted.")
+        await message.reply("✅ Channel added! Now, all messages will be formatted using the provided template.")
     else:
         await message.reply("ℹ️ This channel is already added.")
-
+        
 # Command to remove the channel (Only works if sent in a channel)
 @Client.on_message(filters.command("rem") & filters.channel)
 async def remove_channel(client, message: Message):
@@ -65,5 +74,7 @@ async def format_message(client, message):
     channel_id = message.chat.id
     if await db.is_channel_exist(channel_id):  # Check if channel is in the database
         if message.text and not message.text.startswith("/"):  # Ignore commands
-            formatted_text = f"```\n{message.text}\n```"
-            await message.edit_text(formatted_text)  # Edit message with formatting
+            # Retrieve the formatting text from the database
+            formatting_text = await db.get_formatting(channel_id)
+            formatted_text = formatting_text.replace("{new_message}", message.text)
+            await message.edit_text(formatted_text)
