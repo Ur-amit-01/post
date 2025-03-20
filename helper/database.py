@@ -9,7 +9,7 @@ class Database:
         self.channels = self.db.channels  # Collection for channels
         self.formatting = self.db.formatting  # Collection for formatting templates
         self.admins = self.db.admins  # Collection for admins
-        self.posts = self.db.posts  # Collection for posts
+        self.posts = self.db.posts  # Collection for storing posts and their message IDs
 
     #============ User System ============#
     def new_user(self, id):
@@ -33,14 +33,13 @@ class Database:
         return bool(user)
 
     async def total_users_count(self):
-        count = await self.col.count_documents({})
-        return count
+        return await self.col.count_documents({})
 
     async def get_all_users(self):
         return self.col.find({})
 
     async def delete_user(self, user_id):
-        await self.col.delete_many({'_id': int(user_id)})
+        await self.col.delete_one({'_id': int(user_id)})
 
     # Thumbnail
     async def set_thumbnail(self, id, file_id):
@@ -58,6 +57,45 @@ class Database:
         user = await self.col.find_one({'_id': int(id)})
         return user.get('caption', None)
 
+    #============ Channel System ============#
+    async def add_channel(self, channel_id, channel_name):
+        """Add a new channel to the database."""
+        existing_channel = await self.channels.find_one({"_id": int(channel_id)})
+        if not existing_channel:
+            await self.channels.insert_one({"_id": int(channel_id), "name": channel_name})
+            return True
+        return False
+
+    async def is_channel_exist(self, channel_id):
+        """Check if a channel exists in the database."""
+        return bool(await self.channels.find_one({"_id": int(channel_id)}))
+
+    async def delete_channel(self, channel_id):
+        """Remove a channel from the database."""
+        await self.channels.delete_one({"_id": int(channel_id)})
+
+    async def get_all_channels(self):
+        """Retrieve all connected channels."""
+        return await self.channels.find().to_list(None)
+
+    #============ Post System ============#
+    async def save_post_messages(self, post_id, sent_messages):
+        """Save sent message IDs of a post for tracking and deletion."""
+        await self.posts.update_one(
+            {"_id": post_id},
+            {"$set": {"messages": sent_messages}},
+            upsert=True
+        )
+
+    async def get_post_messages(self, post_id):
+        """Retrieve message IDs of a post."""
+        post_data = await self.posts.find_one({"_id": post_id})
+        return post_data["messages"] if post_data else {}
+
+    async def delete_post_messages(self, post_id):
+        """Delete post tracking data from the database."""
+        await self.posts.delete_one({"_id": post_id})
+
     #============ Formatting System ============#
     async def save_formatting(self, channel_id, formatting_text):
         """Save or update formatting text for a channel."""
@@ -72,88 +110,6 @@ class Database:
         result = await self.formatting.find_one({"_id": int(channel_id)})
         return result.get("formatting_text") if result else None
 
-    #============ Channel System ============#
-    async def add_channel(self, channel_id, channel_name=None):
-        """Add a channel if it doesn't already exist."""
-        channel_id = int(channel_id)  # Ensure ID is an integer
-        if not await self.is_channel_exist(channel_id):
-            await self.channels.insert_one({"_id": channel_id, "name": channel_name})
-            return True  # Successfully added
-        return False  # Already exists
-
-    async def delete_channel(self, channel_id):
-        """Remove a channel from the database."""
-        channel_id = int(channel_id)
-        await self.channels.delete_one({"_id": channel_id})
-
-    async def is_channel_exist(self, channel_id):
-        """Check if a channel is in the database."""
-        return await self.channels.find_one({"_id": int(channel_id)}) is not None
-
-    async def get_all_channels(self):
-        """Retrieve all channels as a list."""
-        return [channel async for channel in self.channels.find({})]
-
-    #============ Post System ============#
-    async def save_post_messages(self, post_id, messages):
-        """Save the message IDs of posts sent to channels with a unique post ID."""
-        print(f"Saving post ID: {post_id}, Messages: {messages}")  # Debug: Check data being saved
-        try:
-            # Ensure post_id is a string
-            post_id = str(post_id)
-            # Ensure messages is a dictionary
-            if not isinstance(messages, dict):
-                raise ValueError("Messages must be a dictionary.")
-
-            # Save to the database
-            await self.posts.update_one(
-                {"_id": post_id},
-                {"$set": {"messages": messages}},
-                upsert=True
-            )
-            print(f"Post ID {post_id} saved successfully!")  # Debug: Confirm save operation
-        except Exception as e:
-            print(f"Error saving post messages: {e}")  # Debug: Log any errors
-
-    async def get_post_messages(self, post_id):
-        """Retrieve the message IDs of posts sent to channels for a specific post ID."""
-        print(f"Retrieving post ID: {post_id}")  # Debug: Check post_id being retrieved
-        try:
-            post = await self.posts.find_one({"_id": str(post_id)})  # Ensure post_id is treated as a string
-            if post:
-                print(f"Post found: {post}")  # Debug: Check retrieved post
-                return post.get("messages", {})
-            else:
-                print(f"No post found with ID: {post_id}")  # Debug: Log if post not found
-                return {}
-        except Exception as e:
-            print(f"Error retrieving post messages: {e}")  # Debug: Log any errors
-            return {}
-
-    async def delete_post_messages(self, post_id):
-        """Delete the message IDs of a specific post."""
-        print(f"Deleting post ID: {post_id}")  # Debug: Check post_id being deleted
-        try:
-            await self.posts.delete_one({"_id": str(post_id)})  # Ensure post_id is treated as a string
-            print(f"Post ID {post_id} deleted successfully!")  # Debug: Confirm delete operation
-        except Exception as e:
-            print(f"Error deleting post messages: {e}")  # Debug: Log any errors
-
-    async def get_most_recent_post_id(self):
-        """Retrieve the most recent post ID."""
-        print("Retrieving most recent post ID...")  # Debug: Log operation
-        try:
-            post = await self.posts.find_one(sort=[("_id", -1)])  # Sort by _id in descending order
-            if post:
-                print(f"Most recent post ID: {post['_id']}")  # Debug: Check retrieved post ID
-                return post["_id"]
-            else:
-                print("No posts found in the database.")  # Debug: Log if no posts exist
-                return None
-        except Exception as e:
-            print(f"Error retrieving most recent post ID: {e}")  # Debug: Log any errors
-            return None
 
 # Initialize the database
 db = Database(DB_URL, DB_NAME)
-
