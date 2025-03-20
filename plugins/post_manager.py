@@ -167,10 +167,10 @@ async def get_stats(client, message: Message):
         "**Channels**:\n" + "\n".join(channel_list)
     )
 
-    # Add a Refresh button
+    # Add a Refresh button with the post ID in the callback data
     keyboard = InlineKeyboardMarkup(
         [
-            [InlineKeyboardButton("🔄 Refresh", callback_data="refresh_stats")]
+            [InlineKeyboardButton("🔄 Refresh", callback_data=f"refresh_stats:{post_id}")]
         ]
     )
 
@@ -180,7 +180,11 @@ async def get_stats(client, message: Message):
 # Handle callback queries (e.g., Refresh button)
 @Client.on_callback_query()
 async def handle_callback_query(client, callback_query: CallbackQuery):
-    if callback_query.data == "refresh_stats":
+    # Extract the post ID from the callback data
+    callback_data = callback_query.data
+    if callback_data.startswith("refresh_stats:"):
+        post_id = callback_data.split(":")[1]
+
         # Get the updated stats
         post_messages = await db.get_post_messages(post_id)
 
@@ -205,5 +209,5 @@ async def handle_callback_query(client, callback_query: CallbackQuery):
 
         # Update the message with the new stats
         await callback_query.message.edit_text(updated_message, reply_markup=callback_query.message.reply_markup)
-        await callback_query.answer("Stats refreshed!")
+        await callback_query.answer("**Stats refreshed!**")
 
