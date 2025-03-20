@@ -2,6 +2,7 @@ from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from helper.database import db  # Assuming you have a database helper
 import time
+import uuid
 
 # Command to add the current channel to the database
 @Client.on_message(filters.command("add") & filters.channel)
@@ -72,9 +73,7 @@ async def send_post(client, message: Message):
 
     # Get all connected channels from the database
     channels = await db.get_all_channels()
-
-    # Generate a unique ID for this post (using timestamp)
-    post_id = str(int(time.time()))
+    post_id = str(uuid.uuid4())  # Generates a truly unique post ID
 
     # Send the post to each channel
     sent_messages = {}
