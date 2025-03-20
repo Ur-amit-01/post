@@ -1,4 +1,3 @@
-# database.py
 import motor.motor_asyncio
 from config import DB_URL, DB_NAME
 
@@ -9,7 +8,10 @@ class Database:
         self.col = self.db.user  # Collection for users
         self.channels = self.db.channels  # Collection for channels
         self.formatting = self.db.formatting  # Collection for formatting templates
+        self.admins = self.db.admins  # Collection for admins
+        self.posts = self.db.posts  # Collection for posts
 
+    #============ User System ============#
     def new_user(self, id):
         return dict(
             _id=int(id),
@@ -57,44 +59,12 @@ class Database:
         user = await self.col.find_one({'_id': int(id)})
         return user.get('caption', None)
 
-    # Prefix
-    async def set_prefix(self, id, prefix):
-        await self.col.update_one({'_id': int(id)}, {'$set': {'prefix': prefix}})
-
-    async def get_prefix(self, id):
-        user = await self.col.find_one({'_id': int(id)})
-        return user.get('prefix', None)
-
-    # Suffix
-    async def set_suffix(self, id, suffix):
-        await self.col.update_one({'_id': int(id)}, {'$set': {'suffix': suffix}})
-
-    async def get_suffix(self, id):
-        user = await self.col.find_one({'_id': int(id)})
-        return user.get('suffix', None)
-
-    # Metadata
-    async def set_metadata(self, id, bool_meta):
-        await self.col.update_one({'_id': int(id)}, {'$set': {'metadata': bool_meta}})
-
-    async def get_metadata(self, id):
-        user = await self.col.find_one({'_id': int(id)})
-        return user.get('metadata', None)
-
-    # Metadata Code
-    async def set_metadata_code(self, id, metadata_code):
-        await self.col.update_one({'_id': int(id)}, {'$set': {'metadata_code': metadata_code}})
-
-    async def get_metadata_code(self, id):
-        user = await self.col.find_one({'_id': int(id)})
-        return user.get('metadata_code', None)
-
-    # Channel System
-    async def add_channel(self, channel_id):
+    #============ Channel System ============#
+    async def add_channel(self, channel_id, channel_name=None):
         """Add a channel if it doesn't already exist."""
         channel_id = int(channel_id)  # Ensure ID is an integer
         if not await self.is_channel_exist(channel_id):
-            await self.channels.insert_one({"_id": channel_id})
+            await self.channels.insert_one({"_id": channel_id, "name": channel_name})
             return True  # Successfully added
         return False  # Already exists
 
@@ -108,10 +78,10 @@ class Database:
         return await self.channels.find_one({"_id": int(channel_id)}) is not None
 
     async def get_all_channels(self):
-        """Retrieve all channel IDs as a list."""
-        return [channel["_id"] async for channel in self.channels.find({})]
+        """Retrieve all channels as a list."""
+        return [channel async for channel in self.channels.find({})]
 
-    # Formatting System
+    #============ Formatting System ============#
     async def save_formatting(self, channel_id, formatting_text):
         """Save or update formatting text for a channel."""
         await self.formatting.update_one(
@@ -124,6 +94,20 @@ class Database:
         """Retrieve formatting text for a channel."""
         result = await self.formatting.find_one({"_id": int(channel_id)})
         return result.get("formatting_text") if result else None
+
+    #============ Post System ============#
+    async def save_post_messages(self, messages):
+        """Save the message IDs of posts sent to channels."""
+        await self.posts.update_one({}, {"$set": {"messages": messages}}, upsert=True)
+
+    async def get_post_messages(self):
+        """Retrieve the message IDs of posts sent to channels."""
+        post = await self.posts.find_one()
+        return post.get("messages") if post else {}
+
+    async def delete_post_messages(self):
+        """Delete all post message IDs."""
+        await self.posts.delete_many({})
 
 # Initialize the database
 db = Database(DB_URL, DB_NAME)
