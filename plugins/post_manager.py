@@ -48,8 +48,6 @@ async def list_channels(client, message: Message):
     response = "**Connected Channels:**\n" + "\n".join(channel_list)
     await message.reply(response)
 
-)
-
 
 # Command to post a message to all channels
 @app.on_message(filters.command("post") & filters.private & filters.reply)
