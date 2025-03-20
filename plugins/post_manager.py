@@ -79,11 +79,8 @@ async def send_post(client, message: Message):
         await message.reply("No channels are connected yet.")
         return
 
-    # Use the message ID from the user's DM as the unique identifier
-    post_id = str(message.reply_to_message.id)
+    # Store the latest sent messages in the database
     sent_messages = {}
-
-    # Send the post to each channel
     for channel in channels:
         try:
             # Use copy_message to handle media and captions
@@ -97,59 +94,46 @@ async def send_post(client, message: Message):
         except Exception as e:
             print(f"Error sending post to channel {channel['_id']}: {e}")
 
-    # Save the sent message IDs in the database with the unique post ID
-    await db.save_post_messages(post_id, sent_messages)
-    await message.reply(f"**✅ Post sent to all connected channels!**\n\n**Post ID:** `{post_id}`")
+    # Save the latest sent messages in the database
+    await db.save_latest_post(sent_messages)
+    await message.reply("**✅ Post sent to all connected channels!**")
 
-# Command to delete the post from all channels
+# Command to delete the latest sent post
 @Client.on_message(filters.command("del_post") & filters.private)
 async def delete_post(client, message: Message):
-    if not message.reply_to_message:
-        await message.reply("**Please reply to the original post message to delete it. 🤦🏻**")
-        return
+    # Get the latest sent messages from the database
+    latest_post = await db.get_latest_post()
 
-    # Use the message ID from the user's DM as the unique identifier
-    post_id = str(message.reply_to_message.id)
-
-    # Get the message IDs for the specified post ID
-    post_messages = await db.get_post_messages(post_id)
-
-    if not post_messages:
-        await message.reply(f"❌ No posts found with ID: `{post_id}`")
+    if not latest_post:
+        await message.reply("❌ No posts have been sent yet.")
         return
 
     # Delete the post from each channel
-    for channel_id, message_id in post_messages.items():
+    for channel_id, message_id in latest_post.items():
         try:
             await client.delete_messages(channel_id, message_id)
+            print(f"Deleted message {message_id} from channel {channel_id}")  # Debug
         except Exception as e:
             print(f"Error deleting post from channel {channel_id}: {e}")
 
-    # Remove the post from the database
-    await db.delete_post_messages(post_id)
-    await message.reply(f"✅ Post `{post_id}` deleted from all channels!")
+    # Remove the latest post from the database
+    await db.delete_latest_post()
+    await message.reply("✅ Latest post deleted from all channels!")
 
 # Command to get detailed stats
 @Client.on_message(filters.command("stats") & filters.private)
 async def get_stats(client, message: Message):
-    if not message.reply_to_message:
-        await message.reply("**Please reply to the original post message to get stats. 🤦🏻**")
-        return
+    # Get the latest sent messages from the database
+    latest_post = await db.get_latest_post()
 
-    # Use the message ID from the user's DM as the unique identifier
-    post_id = str(message.reply_to_message.id)
-
-    # Get the message IDs for the specified post ID
-    post_messages = await db.get_post_messages(post_id)
-
-    if not post_messages:
-        await message.reply(f"❌ No posts found with ID: `{post_id}`")
+    if not latest_post:
+        await message.reply("❌ No posts have been sent yet.")
         return
 
     # Calculate total views and prepare channel list
     total_views = 0
     channel_list = []
-    for channel_id, message_id in post_messages.items():
+    for channel_id, message_id in latest_post.items():
         try:
             message = await client.get_messages(channel_id, message_id)
             views = message.views
@@ -166,10 +150,10 @@ async def get_stats(client, message: Message):
         "**Channels**:\n" + "\n".join(channel_list)
     )
 
-    # Add a Refresh button with the post ID in the callback data
+    # Add a Refresh button
     keyboard = InlineKeyboardMarkup(
         [
-            [InlineKeyboardButton("🔄 Refresh", callback_data=f"refresh_stats:{post_id}")]
+            [InlineKeyboardButton("🔄 Refresh", callback_data="refresh_stats")]
         ]
     )
 
@@ -179,17 +163,19 @@ async def get_stats(client, message: Message):
 # Handle callback queries (e.g., Refresh button)
 @Client.on_callback_query()
 async def handle_callback_query(client, callback_query: CallbackQuery):
-    # Extract the post ID from the callback data
-    callback_data = callback_query.data
-    if callback_data.startswith("refresh_stats:"):
-        post_id = callback_data.split(":")[1]
+    # Handle the Refresh button
+    if callback_query.data == "refresh_stats":
+        # Get the latest sent messages from the database
+        latest_post = await db.get_latest_post()
 
-        # Get the updated stats
-        post_messages = await db.get_post_messages(post_id)
+        if not latest_post:
+            await callback_query.answer("❌ No posts have been sent yet.")
+            return
 
+        # Calculate total views and prepare channel list
         total_views = 0
         channel_list = []
-        for channel_id, message_id in post_messages.items():
+        for channel_id, message_id in latest_post.items():
             try:
                 message = await client.get_messages(channel_id, message_id)
                 views = message.views
