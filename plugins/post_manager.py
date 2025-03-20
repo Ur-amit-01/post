@@ -17,12 +17,12 @@ async def add_current_channel(client, message: Message):
     try:
         added = await db.add_channel(channel_id, channel_name)
         if added:
-            await message.reply(f"✅ Channel '{channel_name}' added!")
+            await message.reply(f"**✅ Channel '{channel_name}' added to my database! 😋**")
         else:
-            await message.reply(f"ℹ️ Channel '{channel_name}' is already added.")
+            await message.reply(f"**ℹ️ Channel '{channel_name}' is already added.**")
     except Exception as e:
         print(f"Error adding channel: {e}")
-        await message.reply("❌ An error occurred while adding the channel. Please try again.")
+        await message.reply("**❌ An error occurred while adding the channel. Please contact my developer.**")
 
 # Command to remove the current channel from the database
 @Client.on_message(filters.command("rem") & filters.channel)
@@ -38,7 +38,7 @@ async def remove_current_channel(client, message: Message):
     try:
         if await db.is_channel_exist(channel_id):
             await db.delete_channel(channel_id)
-            await message.reply(f"✅ Channel '{channel_name}' removed!")
+            await message.reply(f"**✅ Channel '{channel_name}' removed!**")
         else:
             await message.reply(f"ℹ️ Channel '{channel_name}' is not in the database.")
     except Exception as e:
@@ -46,7 +46,7 @@ async def remove_current_channel(client, message: Message):
         await message.reply("❌ An error occurred while removing the channel. Please try again.")
 
 # Command to list all connected channels
-@Client.on_message(filters.command("listchannels") & filters.private)
+@Client.on_message(filters.command("channels") & filters.private)
 async def list_channels(client, message: Message):
     # Get all connected channels from the database
     channels = await db.get_all_channels()
@@ -65,7 +65,7 @@ async def list_channels(client, message: Message):
 @Client.on_message(filters.command("post") & filters.private)
 async def send_post(client, message: Message):
     if not message.reply_to_message:
-        await message.reply("Please reply to the message you want to post.")
+        await message.reply("**Please reply to the message you want to post. 🤦🏻**")
         return
 
     post_content = message.reply_to_message
@@ -92,10 +92,10 @@ async def send_post(client, message: Message):
 
     # Save the sent message IDs in the database with the unique post ID
     await db.save_post_messages(post_id, sent_messages)
-    await message.reply(f"✅ Post sent to all connected channels!\n\n**Post ID:** `{post_id}`")
+    await message.reply(f"**✅ Post sent to all connected channels!**\n\n**Post ID:** `{post_id}`")
 
 # Command to delete the post from all channels
-@Client.on_message(filters.command("deletepost") & filters.private)
+@Client.on_message(filters.command("del_post") & filters.private)
 async def delete_post(client, message: Message):
     # Get the post ID from the command (if provided)
     args = message.text.split(maxsplit=1)
