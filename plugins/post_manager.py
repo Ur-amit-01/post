@@ -2,7 +2,6 @@ from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from helper.database import db  # Assuming you have a database helper
 import time
-import uuid
 
 # Command to add the current channel to the database
 @Client.on_message(filters.command("add") & filters.channel)
@@ -80,7 +79,8 @@ async def send_post(client, message: Message):
         await message.reply("No channels are connected yet.")
         return
 
-    post_id = str(uuid.uuid4())  # Generates a truly unique post ID
+    # Use the message ID from the user's DM as the unique identifier
+    post_id = str(message.reply_to_message.id)
     sent_messages = {}
 
     # Send the post to each channel
@@ -104,16 +104,12 @@ async def send_post(client, message: Message):
 # Command to delete the post from all channels
 @Client.on_message(filters.command("del_post") & filters.private)
 async def delete_post(client, message: Message):
-    # Get the post ID from the command (if provided)
-    args = message.text.split(maxsplit=1)
-    post_id = args[1] if len(args) > 1 else None
+    if not message.reply_to_message:
+        await message.reply("**Please reply to the original post message to delete it. 🤦🏻**")
+        return
 
-    if not post_id:
-        # If no post ID is provided, delete the most recent post
-        post_id = await db.get_most_recent_post_id()
-        if not post_id:
-            await message.reply("No posts have been sent yet.")
-            return
+    # Use the message ID from the user's DM as the unique identifier
+    post_id = str(message.reply_to_message.id)
 
     # Get the message IDs for the specified post ID
     post_messages = await db.get_post_messages(post_id)
@@ -136,16 +132,12 @@ async def delete_post(client, message: Message):
 # Command to get detailed stats
 @Client.on_message(filters.command("stats") & filters.private)
 async def get_stats(client, message: Message):
-    # Get the post ID from the command (if provided)
-    args = message.text.split(maxsplit=1)
-    post_id = args[1] if len(args) > 1 else None
+    if not message.reply_to_message:
+        await message.reply("**Please reply to the original post message to get stats. 🤦🏻**")
+        return
 
-    if not post_id:
-        # If no post ID is provided, get stats for the most recent post
-        post_id = await db.get_most_recent_post_id()
-        if not post_id:
-            await message.reply("No posts have been sent yet.")
-            return
+    # Use the message ID from the user's DM as the unique identifier
+    post_id = str(message.reply_to_message.id)
 
     # Get the message IDs for the specified post ID
     post_messages = await db.get_post_messages(post_id)
@@ -217,4 +209,3 @@ async def handle_callback_query(client, callback_query: CallbackQuery):
         # Update the message with the new stats
         await callback_query.message.edit_text(updated_message, reply_markup=callback_query.message.reply_markup)
         await callback_query.answer("**Stats refreshed!**")
-
