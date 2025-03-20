@@ -70,13 +70,20 @@ async def send_post(client, message: Message):
         return
 
     post_content = message.reply_to_message
+    print(f"Post Content: {post_content}")  # Debug: Check if post_content is valid
 
     # Get all connected channels from the database
     channels = await db.get_all_channels()
+    print(f"Channels: {channels}")  # Debug: Check if channels are retrieved
+
+    if not channels:
+        await message.reply("No channels are connected yet.")
+        return
+
     post_id = str(uuid.uuid4())  # Generates a truly unique post ID
+    sent_messages = {}
 
     # Send the post to each channel
-    sent_messages = {}
     for channel in channels:
         try:
             # Use copy_message to handle media and captions
@@ -86,6 +93,7 @@ async def send_post(client, message: Message):
                 message_id=post_content.id
             )
             sent_messages[channel["_id"]] = sent_message.id  # Store message ID for later management
+            print(f"Post sent to channel {channel['_id']} with message ID {sent_message.id}")  # Debug
         except Exception as e:
             print(f"Error sending post to channel {channel['_id']}: {e}")
 
