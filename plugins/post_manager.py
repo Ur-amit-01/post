@@ -5,16 +5,28 @@ from helper.database import db  # Assuming you have a database helper
 # Command to add a channel
 @Client.on_message(filters.command("addchannel") & filters.private)
 async def add_channel(client, message: Message):
+    # Check if the message is forwarded from a channel
     if not message.forward_from_chat or message.forward_from_chat.type != "channel":
-        await message.reply("Please forward a message from the channel you want to add.")
+        await message.reply("❌ Please forward a message from the channel you want to add.")
         return
 
+    # Extract channel details
     channel_id = message.forward_from_chat.id
     channel_name = message.forward_from_chat.title
 
+    # Debugging: Print channel details
+    print(f"Channel ID: {channel_id}, Channel Name: {channel_name}")
+
     # Save the channel to the database
-    await db.add_channel(channel_id, channel_name)
-    await message.reply(f"✅ Channel '{channel_name}' added!")
+    try:
+        added = await db.add_channel(channel_id, channel_name)
+        if added:
+            await message.reply(f"✅ Channel '{channel_name}' added!")
+        else:
+            await message.reply(f"ℹ️ Channel '{channel_name}' is already added.")
+    except Exception as e:
+        print(f"Error adding channel: {e}")
+        await message.reply("❌ An error occurred while adding the channel. Please try again.")
 
 # Command to send a post to all connected channels
 @Client.on_message(filters.command("post") & filters.private)
@@ -113,21 +125,4 @@ async def handle_callback_query(client, callback_query: CallbackQuery):
         # Update the message with the new stats
         await callback_query.message.edit_text(updated_message, reply_markup=callback_query.message.reply_markup)
         await callback_query.answer("Stats refreshed!")
-
-# Database functions
-async def add_channel(channel_id, channel_name):
-    if await db.channels.find_one({"_id": channel_id}):
-        return False  # Channel already exists
-    await db.channels.insert_one({"_id": channel_id, "name": channel_name})
-    return True
-
-async def get_all_channels():
-    return await db.channels.find().to_list(None)
-
-async def save_post_messages(messages):
-    await db.posts.update_one({}, {"$set": {"messages": messages}}, upsert=True)
-
-async def get_post_messages():
-    post = await db.posts.find_one()
-    return post["messages"] if post else {}
 
