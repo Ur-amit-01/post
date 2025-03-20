@@ -2,73 +2,42 @@ from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from helper.database import db  # Assuming you have a database helper
 
-# Command to add multiple channels
-@Client.on_message(filters.command("addchannel") & filters.private)
-async def add_channel(client, message: Message):
-    args = message.text.split(maxsplit=1)
-    
-    if len(args) < 2:
-        await message.reply("❌ Usage: `/addchannel <channel_id1>, <channel_id2>, ...`\nExample: `/addchannel -1001234567890, -1009876543210`", parse_mode="markdown")
+# Command to add the current channel to the database
+@Client.on_message(filters.command("add") & filters.channel)
+async def add_current_channel(client, message: Message):
+    # Extract channel details
+    channel_id = message.chat.id
+    channel_name = message.chat.title
+
+    # Debug: Print channel details
+    print(f"Channel ID: {channel_id}, Channel Name: {channel_name}")
+
+    # Save the channel to the database
+    try:
+        added = await db.add_channels(channel_id, channel_name)
+        if added:
+            await message.reply(f"✅ Channel '{channel_name}' added!")
+        else:
+            await message.reply(f"ℹ️ Channel '{channel_name}' is already added.")
+    except Exception as e:
+        print(f"Error adding channel: {e}")
+        await message.reply("❌ An error occurred while adding the channel. Please try again.")
+
+# Command to list all connected channels
+@Client.on_message(filters.command("listchannels") & filters.private)
+async def list_channels(client, message: Message):
+    # Get all connected channels from the database
+    channels = await db.get_all_channels()
+
+    if not channels:
+        await message.reply("No channels are connected yet.")
         return
 
-    channel_ids = args[1].replace(" ", "").split(",")  # Remove spaces and split by comma
-    added_channels = []
-    already_added = []
-    failed_channels = []
+    # Prepare the list of channels
+    channel_list = [f"📢 **{channel['name']}** (`{channel['_id']}`)" for channel in channels]
+    response = "**Connected Channels:**\n" + "\n".join(channel_list)
 
-    for channel_id in channel_ids:
-        try:
-            channel_id = int(channel_id)
-            chat = await client.get_chat(channel_id)  # Fetch channel info
-            channel_name = chat.title
-
-            added = await db.add_channel(channel_id, channel_name)  # Save to DB
-            if added:
-                added_channels.append(channel_name)
-            else:
-                already_added.append(channel_name)
-
-        except Exception as e:
-            failed_channels.append(channel_id)
-            print(f"Error adding channel {channel_id}: {e}")
-
-    response = "✅ **Channel(s) Added Successfully:**\n" + "\n".join(added_channels) if added_channels else ""
-    response += "\nℹ️ **Already Added:**\n" + "\n".join(already_added) if already_added else ""
-    response += "\n❌ **Failed to Add:**\n" + ", ".join(failed_channels) if failed_channels else ""
-
-    await message.reply(response if response else "❌ No channels were added.")
-
-# Command to delete multiple channels
-@Client.on_message(filters.command("delchannel") & filters.private)
-async def del_channel(client, message: Message):
-    args = message.text.split(maxsplit=1)
-
-    if len(args) < 2:
-        await message.reply("❌ Usage: `/delchannel <channel_id1>, <channel_id2>, ...`\nExample: `/delchannel -1001234567890, -1009876543210`", parse_mode="markdown")
-        return
-
-    channel_ids = args[1].replace(" ", "").split(",")  # Remove spaces and split by comma
-    deleted_channels = []
-    not_found_channels = []
-
-    for channel_id in channel_ids:
-        try:
-            channel_id = int(channel_id)
-
-            deleted = await db.delete_channel(channel_id)  # Remove from DB
-            if deleted:
-                deleted_channels.append(str(channel_id))
-            else:
-                not_found_channels.append(str(channel_id))
-
-        except Exception as e:
-            not_found_channels.append(str(channel_id))
-            print(f"Error deleting channel {channel_id}: {e}")
-
-    response = "✅ **Channel(s) Deleted Successfully:**\n" + "\n".join(deleted_channels) if deleted_channels else ""
-    response += "\n❌ **Not Found in Database:**\n" + ", ".join(not_found_channels) if not_found_channels else ""
-
-    await message.reply(response if response else "❌ No channels were deleted.")
+    await message.reply(response)
 
 # Command to send a post to all connected channels
 @Client.on_message(filters.command("post") & filters.private)
