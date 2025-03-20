@@ -58,45 +58,6 @@ class Database:
         user = await self.col.find_one({'_id': int(id)})
         return user.get('caption', None)
 
-    #============ Channel System ============#
-    async def add_channels(self, channel_ids):
-        """Add multiple channels to the database."""
-        added_channels = []
-        already_existing = []
-
-        for channel_id in channel_ids:
-            channel_id = int(channel_id)  # Ensure it's an integer
-            if not await self.is_channel_exist(channel_id):
-                await self.channels.insert_one({"_id": channel_id})
-                added_channels.append(channel_id)
-            else:
-                already_existing.append(channel_id)
-
-        return added_channels, already_existing
-
-    async def delete_channels(self, channel_ids):
-        """Delete multiple channels from the database."""
-        deleted_channels = []
-        not_found = []
-
-        for channel_id in channel_ids:
-            channel_id = int(channel_id)
-            if await self.is_channel_exist(channel_id):
-                await self.channels.delete_one({"_id": channel_id})
-                deleted_channels.append(channel_id)
-            else:
-                not_found.append(channel_id)
-
-        return deleted_channels, not_found
-
-    async def is_channel_exist(self, channel_id):
-        """Check if a channel exists in the database."""
-        return await self.channels.find_one({"_id": int(channel_id)}) is not None
-
-    async def get_all_channels(self):
-        """Retrieve all channels as a list."""
-        return [channel async for channel in self.channels.find({})]
-
     #============ Formatting System ============#
     async def save_formatting(self, channel_id, formatting_text):
         """Save or update formatting text for a channel."""
@@ -110,6 +71,28 @@ class Database:
         """Retrieve formatting text for a channel."""
         result = await self.formatting.find_one({"_id": int(channel_id)})
         return result.get("formatting_text") if result else None
+
+    #============ Channel System ============#
+    async def add_channel(self, channel_id, channel_name=None):
+        """Add a channel if it doesn't already exist."""
+        channel_id = int(channel_id)  # Ensure ID is an integer
+        if not await self.is_channel_exist(channel_id):
+            await self.channels.insert_one({"_id": channel_id, "name": channel_name})
+            return True  # Successfully added
+        return False  # Already exists
+
+    async def delete_channel(self, channel_id):
+        """Remove a channel from the database."""
+        channel_id = int(channel_id)
+        await self.channels.delete_one({"_id": channel_id})
+
+    async def is_channel_exist(self, channel_id):
+        """Check if a channel is in the database."""
+        return await self.channels.find_one({"_id": int(channel_id)}) is not None
+
+    async def get_all_channels(self):
+        """Retrieve all channels as a list."""
+        return [channel async for channel in self.channels.find({})]
 
     #============ Post System ============#
     async def save_post_messages(self, messages):
