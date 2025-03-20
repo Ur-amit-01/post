@@ -98,25 +98,24 @@ class Database:
     async def save_post_messages(self, post_id, messages):
         """Save the message IDs of posts sent to channels with a unique post ID."""
         await self.posts.update_one(
-            {"_id": post_id},
+            {"_id": str(post_id)},  # Ensure post_id is treated as a string
             {"$set": {"messages": messages}},
             upsert=True
         )
 
     async def get_post_messages(self, post_id):
         """Retrieve the message IDs of posts sent to channels for a specific post ID."""
-        post = await self.posts.find_one({"_id": post_id})
+        post = await self.posts.find_one({"_id": str(post_id)})  # Ensure post_id is treated as a string
         return post.get("messages") if post else {}
 
     async def delete_post_messages(self, post_id):
         """Delete the message IDs of a specific post."""
-        await self.posts.delete_one({"_id": post_id})
+        await self.posts.delete_one({"_id": str(post_id)})  # Ensure post_id is treated as a string
 
     async def get_most_recent_post_id(self):
         """Retrieve the most recent post ID."""
-        post = await self.posts.find_one(sort=[("_id", -1)])
+        post = await self.posts.find_one(sort=[("_id", -1)])  # Sort by _id in descending order
         return post["_id"] if post else None
 
 # Initialize the database
 db = Database(DB_URL, DB_NAME)
-
