@@ -48,47 +48,113 @@ async def list_channels(client, message: Message):
     response = "**Connected Channels:**\n" + "\n".join(channel_list)
     await message.reply(response)
 
-
-# Command to post a message to all channels
-@Client.on_message(filters.command("post") & filters.private & filters.reply)
-def post_message_command(client: Client, message: Message):
-    # Get the replied message
-    replied_message = message.reply_to_message
-
-    # Get all channels from the database
-    channels = get_all_channels()
-
-    if not channels:
-        message.reply_text("❌ No channels in the database!")
+# Command to send a post to all connected channels
+@Client.on_message(filters.command("post") & filters.private)
+async def send_post(client, message: Message):
+    if not message.reply_to_message:
+        await message.reply("❌ Reply to a message to post it.")
         return
 
-    # Forward the replied message to all channels
-    for channel_id in channels:
-        try:
-            replied_message.forward(chat_id=channel_id)
-        except Exception as e:
-            print(f"Failed to forward message to channel {channel_id}: {e}")
-
-    message.reply_text("✅ Message posted to all channels!")
-
-# Command to delete a message from all channels
-@Client.on_message(filters.command("delete") & filters.private & filters.reply)
-def delete_message_command(client: Client, message: Message):
-    # Get the replied message
-    replied_message = message.reply_to_message
-
-    # Get all channels from the database
-    channels = get_all_channels()
+    post_content = message.reply_to_message
+    channels = await db.get_all_channels()
 
     if not channels:
-        message.reply_text("❌ No channels in the database!")
+        await message.reply("No channels connected yet.")
         return
 
-    # Delete the replied message from all channels
-    for channel_id in channels:
+    sent_messages = {}
+    for channel in channels:
         try:
-            client.delete_messages(chat_id=channel_id, message_ids=replied_message.id)
+            sent_message = await client.copy_message(
+                chat_id=channel["_id"],
+                from_chat_id=message.chat.id,
+                message_id=post_content.id
+            )
+            sent_messages[channel["_id"]] = sent_message.id
+            print(f"Posted to {channel['name']} (ID: {channel['_id']})")
         except Exception as e:
-            print(f"Failed to delete message from channel {channel_id}: {e}")
+            print(f"Error posting to {channel['name']}: {e}")
 
-    message.reply_text("✅ Message deleted from all channels!")
+    await db.save_latest_post(sent_messages)
+    await message.reply("✅ Post sent to all channels!")
+
+# Command to delete the latest post
+@Client.on_message(filters.command("del_post") & filters.private)
+async def delete_post(client, message: Message):
+    latest_post = await db.get_latest_post()
+
+    if not latest_post:
+        await message.reply("❌ No posts sent yet.")
+        return
+
+    for channel_id, message_id in latest_post.items():
+        try:
+            await client.delete_messages(channel_id, message_id)
+            print(f"Deleted post from channel {channel_id}")
+        except Exception as e:
+            print(f"Error deleting post from {channel_id}: {e}")
+
+    await db.delete_latest_post()
+    await message.reply("✅ Latest post deleted!")
+
+# Command to get stats for the latest post
+@Client.on_message(filters.command("stats") & filters.private)
+async def get_stats(client, message: Message):
+    latest_post = await db.get_latest_post()
+
+    if not latest_post:
+        await message.reply("❌ No posts sent yet.")
+        return
+
+    total_views = 0
+    channel_list = []
+    for channel_id, message_id in latest_post.items():
+        try:
+            message = await client.get_messages(channel_id, message_id)
+            views = message.views
+            total_views += views
+            channel_name = (await client.get_chat(channel_id)).title
+            channel_list.append(f"📢 **{channel_name}**: {views} views")
+        except Exception as e:
+            print(f"Error fetching stats for {channel_id}: {e}")
+
+    stats_message = (
+        f"📊 **Post Stats**\n\n"
+        f"👀 **Total Views**: {total_views}\n\n"
+        "**Channels**:\n" + "\n".join(channel_list)
+    )
+
+    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🔄 Refresh", callback_data="refresh_stats")]])
+    await message.reply_text(stats_message, reply_markup=keyboard)
+
+# Handle callback queries (e.g., Refresh button)
+@Client.on_callback_query()
+async def handle_callback_query(client, callback_query: CallbackQuery):
+    if callback_query.data == "refresh_stats":
+        latest_post = await db.get_latest_post()
+
+        if not latest_post:
+            await callback_query.answer("❌ No posts sent yet.")
+            return
+
+        total_views = 0
+        channel_list = []
+        for channel_id, message_id in latest_post.items():
+            try:
+                message = await client.get_messages(channel_id, message_id)
+                views = message.views
+                total_views += views
+                channel_name = (await client.get_chat(channel_id)).title
+                channel_list.append(f"📢 **{channel_name}**: {views} views")
+            except Exception as e:
+                print(f"Error fetching stats for {channel_id}: {e}")
+
+        updated_message = (
+            f"📊 **Post Stats**\n\n"
+            f"👀 **Total Views**: {total_views}\n\n"
+            "**Channels**:\n" + "\n".join(channel_list)
+        )
+
+        await callback_query.message.edit_text(updated_message, reply_markup=callback_query.message.reply_markup)
+        await callback_query.answer("✅ Stats refreshed!")
+        
