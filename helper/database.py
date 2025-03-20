@@ -97,25 +97,63 @@ class Database:
     #============ Post System ============#
     async def save_post_messages(self, post_id, messages):
         """Save the message IDs of posts sent to channels with a unique post ID."""
-        await self.posts.update_one(
-            {"_id": str(post_id)},  # Ensure post_id is treated as a string
-            {"$set": {"messages": messages}},
-            upsert=True
-        )
+        print(f"Saving post ID: {post_id}, Messages: {messages}")  # Debug: Check data being saved
+        try:
+            # Ensure post_id is a string
+            post_id = str(post_id)
+            # Ensure messages is a dictionary
+            if not isinstance(messages, dict):
+                raise ValueError("Messages must be a dictionary.")
+
+            # Save to the database
+            await self.posts.update_one(
+                {"_id": post_id},
+                {"$set": {"messages": messages}},
+                upsert=True
+            )
+            print(f"Post ID {post_id} saved successfully!")  # Debug: Confirm save operation
+        except Exception as e:
+            print(f"Error saving post messages: {e}")  # Debug: Log any errors
 
     async def get_post_messages(self, post_id):
         """Retrieve the message IDs of posts sent to channels for a specific post ID."""
-        post = await self.posts.find_one({"_id": str(post_id)})  # Ensure post_id is treated as a string
-        return post.get("messages") if post else {}
+        print(f"Retrieving post ID: {post_id}")  # Debug: Check post_id being retrieved
+        try:
+            post = await self.posts.find_one({"_id": str(post_id)})  # Ensure post_id is treated as a string
+            if post:
+                print(f"Post found: {post}")  # Debug: Check retrieved post
+                return post.get("messages", {})
+            else:
+                print(f"No post found with ID: {post_id}")  # Debug: Log if post not found
+                return {}
+        except Exception as e:
+            print(f"Error retrieving post messages: {e}")  # Debug: Log any errors
+            return {}
 
     async def delete_post_messages(self, post_id):
         """Delete the message IDs of a specific post."""
-        await self.posts.delete_one({"_id": str(post_id)})  # Ensure post_id is treated as a string
+        print(f"Deleting post ID: {post_id}")  # Debug: Check post_id being deleted
+        try:
+            await self.posts.delete_one({"_id": str(post_id)})  # Ensure post_id is treated as a string
+            print(f"Post ID {post_id} deleted successfully!")  # Debug: Confirm delete operation
+        except Exception as e:
+            print(f"Error deleting post messages: {e}")  # Debug: Log any errors
 
     async def get_most_recent_post_id(self):
         """Retrieve the most recent post ID."""
-        post = await self.posts.find_one(sort=[("_id", -1)])  # Sort by _id in descending order
-        return post["_id"] if post else None
+        print("Retrieving most recent post ID...")  # Debug: Log operation
+        try:
+            post = await self.posts.find_one(sort=[("_id", -1)])  # Sort by _id in descending order
+            if post:
+                print(f"Most recent post ID: {post['_id']}")  # Debug: Check retrieved post ID
+                return post["_id"]
+            else:
+                print("No posts found in the database.")  # Debug: Log if no posts exist
+                return None
+        except Exception as e:
+            print(f"Error retrieving most recent post ID: {e}")  # Debug: Log any errors
+            return None
 
 # Initialize the database
 db = Database(DB_URL, DB_NAME)
+
