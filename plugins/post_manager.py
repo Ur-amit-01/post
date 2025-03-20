@@ -75,8 +75,16 @@ async def send_post(client, message: Message):
     # Send the post to each channel
     sent_messages = {}
     for channel in channels:
-        sent_message = await client.send_message(channel["_id"], post_content.text or post_content.caption, post_content.media)
-        sent_messages[channel["_id"]] = sent_message.id  # Store message ID for later management
+        try:
+            # Use copy_message to handle media and captions
+            sent_message = await client.copy_message(
+                chat_id=channel["_id"],
+                from_chat_id=message.chat.id,
+                message_id=post_content.id
+            )
+            sent_messages[channel["_id"]] = sent_message.id  # Store message ID for later management
+        except Exception as e:
+            print(f"Error sending post to channel {channel['_id']}: {e}")
 
     # Save the sent message IDs in the database
     await db.save_post_messages(sent_messages)
@@ -88,9 +96,16 @@ async def delete_post(client, message: Message):
     # Get the message IDs from the database
     post_messages = await db.get_post_messages()
 
+    if not post_messages:
+        await message.reply("No posts have been sent yet.")
+        return
+
     # Delete the post from each channel
     for channel_id, message_id in post_messages.items():
-        await client.delete_messages(channel_id, message_id)
+        try:
+            await client.delete_messages(channel_id, message_id)
+        except Exception as e:
+            print(f"Error deleting post from channel {channel_id}: {e}")
 
     await message.reply("✅ Post deleted from all channels!")
 
@@ -108,11 +123,14 @@ async def get_stats(client, message: Message):
     total_views = 0
     channel_list = []
     for channel_id, message_id in post_messages.items():
-        message = await client.get_messages(channel_id, message_id)
-        views = message.views
-        total_views += views
-        channel_name = (await client.get_chat(channel_id)).title
-        channel_list.append(f"📢 **{channel_name}**: {views} views")
+        try:
+            message = await client.get_messages(channel_id, message_id)
+            views = message.views
+            total_views += views
+            channel_name = (await client.get_chat(channel_id)).title
+            channel_list.append(f"📢 **{channel_name}**: {views} views")
+        except Exception as e:
+            print(f"Error fetching stats for channel {channel_id}: {e}")
 
     # Create the stats message
     stats_message = (
@@ -141,11 +159,14 @@ async def handle_callback_query(client, callback_query: CallbackQuery):
         total_views = 0
         channel_list = []
         for channel_id, message_id in post_messages.items():
-            message = await client.get_messages(channel_id, message_id)
-            views = message.views
-            total_views += views
-            channel_name = (await client.get_chat(channel_id)).title
-            channel_list.append(f"📢 **{channel_name}**: {views} views")
+            try:
+                message = await client.get_messages(channel_id, message_id)
+                views = message.views
+                total_views += views
+                channel_name = (await client.get_chat(channel_id)).title
+                channel_list.append(f"📢 **{channel_name}**: {views} views")
+            except Exception as e:
+                print(f"Error fetching stats for channel {channel_id}: {e}")
 
         # Update the stats message
         updated_message = (
