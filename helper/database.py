@@ -10,6 +10,7 @@ class Database:
         self.formatting = self.db.formatting  # Collection for formatting templates
         self.admins = self.db.admins  # Collection for admins
         self.posts = self.db.posts  # Collection for storing posts and their message IDs
+        self.latest_posts = self.db.latest_posts  # Collection for storing latest post
 
     #============ User System ============#
     def new_user(self, id):
@@ -95,6 +96,24 @@ class Database:
     async def delete_post_messages(self, post_id):
         """Delete post tracking data from the database."""
         await self.posts.delete_one({"_id": post_id})
+
+    #============ Latest Post System ============#
+    async def save_latest_post(self, sent_messages):
+        """Save the latest post sent to channels."""
+        await self.latest_posts.update_one(
+            {"_id": "latest_post"},
+            {"$set": {"messages": sent_messages}},
+            upsert=True
+        )
+
+    async def get_latest_post(self):
+        """Retrieve the latest post details."""
+        post_data = await self.latest_posts.find_one({"_id": "latest_post"})
+        return post_data["messages"] if post_data else {}
+
+    async def delete_latest_post(self):
+        """Delete the latest post from the database."""
+        await self.latest_posts.delete_one({"_id": "latest_post"})
 
     #============ Formatting System ============#
     async def save_formatting(self, channel_id, formatting_text):
