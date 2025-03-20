@@ -95,18 +95,28 @@ class Database:
         return [channel async for channel in self.channels.find({})]
 
     #============ Post System ============#
-    async def save_post_messages(self, messages):
-        """Save the message IDs of posts sent to channels."""
-        await self.posts.update_one({}, {"$set": {"messages": messages}}, upsert=True)
+    async def save_post_messages(self, post_id, messages):
+        """Save the message IDs of posts sent to channels with a unique post ID."""
+        await self.posts.update_one(
+            {"_id": post_id},
+            {"$set": {"messages": messages}},
+            upsert=True
+        )
 
-    async def get_post_messages(self):
-        """Retrieve the message IDs of posts sent to channels."""
-        post = await self.posts.find_one()
+    async def get_post_messages(self, post_id):
+        """Retrieve the message IDs of posts sent to channels for a specific post ID."""
+        post = await self.posts.find_one({"_id": post_id})
         return post.get("messages") if post else {}
 
-    async def delete_post_messages(self):
-        """Delete all post message IDs."""
-        await self.posts.delete_many({})
+    async def delete_post_messages(self, post_id):
+        """Delete the message IDs of a specific post."""
+        await self.posts.delete_one({"_id": post_id})
+
+    async def get_most_recent_post_id(self):
+        """Retrieve the most recent post ID."""
+        post = await self.posts.find_one(sort=[("_id", -1)])
+        return post["_id"] if post else None
 
 # Initialize the database
 db = Database(DB_URL, DB_NAME)
+
