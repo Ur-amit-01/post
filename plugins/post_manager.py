@@ -14,7 +14,7 @@ async def add_current_channel(client, message: Message):
 
     # Save the channel to the database
     try:
-        added = await db.add_channels(channel_id, channel_name)
+        added = await db.add_channel(channel_id, channel_name)
         if added:
             await message.reply(f"✅ Channel '{channel_name}' added!")
         else:
@@ -22,6 +22,27 @@ async def add_current_channel(client, message: Message):
     except Exception as e:
         print(f"Error adding channel: {e}")
         await message.reply("❌ An error occurred while adding the channel. Please try again.")
+
+# Command to remove the current channel from the database
+@Client.on_message(filters.command("rem") & filters.channel)
+async def remove_current_channel(client, message: Message):
+    # Extract channel details
+    channel_id = message.chat.id
+    channel_name = message.chat.title
+
+    # Debug: Print channel details
+    print(f"Channel ID: {channel_id}, Channel Name: {channel_name}")
+
+    # Remove the channel from the database
+    try:
+        if await db.is_channel_exist(channel_id):
+            await db.delete_channel(channel_id)
+            await message.reply(f"✅ Channel '{channel_name}' removed!")
+        else:
+            await message.reply(f"ℹ️ Channel '{channel_name}' is not in the database.")
+    except Exception as e:
+        print(f"Error removing channel: {e}")
+        await message.reply("❌ An error occurred while removing the channel. Please try again.")
 
 # Command to list all connected channels
 @Client.on_message(filters.command("listchannels") & filters.private)
@@ -136,4 +157,3 @@ async def handle_callback_query(client, callback_query: CallbackQuery):
         # Update the message with the new stats
         await callback_query.message.edit_text(updated_message, reply_markup=callback_query.message.reply_markup)
         await callback_query.answer("Stats refreshed!")
-
