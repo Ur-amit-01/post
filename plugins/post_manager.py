@@ -38,14 +38,22 @@ async def remove_current_channel(client, message: Message):
 # Command to list all connected channels
 @Client.on_message(filters.command("channels") & filters.private)
 async def list_channels(client, message: Message):
+    # Retrieve all channels from the database
     channels = await db.get_all_channels()
 
     if not channels:
         await message.reply("No channels connected yet.")
         return
 
+    total_channels = len(channels)
+
+    # Format the list of channels
     channel_list = [f"📢 **{channel['name']}** (`{channel['_id']}`)" for channel in channels]
-    response = "**Connected Channels:**\n" + "\n".join(channel_list)
+    response = (
+        f"> **Total Channels :- ({total_channels})**\n\n"  # Add total count here
+        + "\n".join(channel_list)
+    )
+
     await message.reply(response)
     
 
