@@ -2,17 +2,50 @@ from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from helper.database import db  # Database helper
 import time
-from config import ADMIN
+import random
+from config import *
+
+LOG_TEXT = "**New User:** {}\n**User ID:** `{}`\n**Total Users:** `{}`"  # Log message format
 
 # Function to check if the user is the admin
 def is_admin(user_id: int) -> bool:
     return user_id == ADMIN
 
+# Command to start the bot (public command)
+@Client.on_message(filters.private & filters.command("start"))
+async def start(client, message: Message):
+    try:
+        await message.react(emoji=random.choice(REACTIONS), big=True)  # React with a random emoji
+    except:
+        pass
+
+    # Add user to the database if they don't exist
+    if not await db.is_user_exist(message.from_user.id):
+        await db.add_user(message.from_user.id)
+        total_users = await db.total_users_count()
+        await client.send_message(LOG_CHANNEL, LOG_TEXT.format(message.from_user.mention, message.from_user.id, total_users))
+
+    # Welcome message
+    txt = (
+        f"> **✨👋🏻 Hey {message.from_user.mention} !!**\n\n"
+        f"**🔋Welcome to the Channel Manager Bot, Manage multiple channels and post messages with ease!**\n\n"
+        f"> **ᴅᴇᴠᴇʟᴏᴘᴇʀ 🧑🏻‍💻 :- @Axa_bachha**"
+    )
+    button = InlineKeyboardMarkup([
+        [InlineKeyboardButton('📜 ᴀʙᴏᴜᴛ', callback_data='about'), InlineKeyboardButton('🕵🏻‍♀️ ʜᴇʟᴘ', callback_data='help')]
+    ])
+
+    # Send the start message with or without a picture
+    if START_PIC:
+        await message.reply_photo(START_PIC, caption=txt, reply_markup=button)
+    else:
+        await message.reply_text(text=txt, reply_markup=button, disable_web_page_preview=True)
+
 # Command to add the current channel to the database
 @Client.on_message(filters.command("add") & filters.channel)
 async def add_current_channel(client, message: Message):
     if not is_admin(message.from_user.id):
-        await message.reply("**Only my owner can access my commands. 🤭**")
+        await message.reply("❌ Only my owner can use me.")
         return
 
     channel_id = message.chat.id
@@ -32,7 +65,7 @@ async def add_current_channel(client, message: Message):
 @Client.on_message(filters.command("rem") & filters.channel)
 async def remove_current_channel(client, message: Message):
     if not is_admin(message.from_user.id):
-        await message.reply("**Only my owner can access my commands. 🤭**")
+        await message.reply("❌ Only my owner can use me.")
         return
 
     channel_id = message.chat.id
@@ -52,7 +85,7 @@ async def remove_current_channel(client, message: Message):
 @Client.on_message(filters.command("channels") & filters.private)
 async def list_channels(client, message: Message):
     if not is_admin(message.from_user.id):
-        await message.reply("**Only my owner can access my commands. 🤭**")
+        await message.reply("❌ Only my owner can use me.")
         return
 
     # Retrieve all channels from the database
@@ -76,7 +109,7 @@ async def list_channels(client, message: Message):
 @Client.on_message(filters.command("post") & filters.private)
 async def send_post(client, message: Message):
     if not is_admin(message.from_user.id):
-        await message.reply("**Only my owner can access my commands. 🤭**")
+        await message.reply("❌ Only my owner can use me.")
         return
 
     # Check if the user is replying to a message
@@ -116,13 +149,14 @@ async def send_post(client, message: Message):
     # Reply with post status and user ID
     await message.reply(
         f"**• Post sent to all channels! ✅\n"
-        f"• Post ID: `{post_id}` ✍🏻"
+        f"• Post ID: `{post_id}` ✍🏻\n"
+        f"• User ID: `{message.from_user.id}`**"
     )
 
 @Client.on_message(filters.command("del_post") & filters.private)
 async def delete_post(client, message: Message):
     if not is_admin(message.from_user.id):
-        await message.reply("**Only my owner can access my commands. 🤭**")
+        await message.reply("❌ Only my owner can use me.")
         return
 
     # Check if the user provided a post ID
@@ -160,3 +194,4 @@ async def delete_post(client, message: Message):
     # Delete the post from the database
     await db.delete_post(post_id)
     await message.reply(f"**✅ Post `{post_id}` deleted from all channels!**")
+
