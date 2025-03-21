@@ -48,20 +48,30 @@ async def list_channels(client, message: Message):
     response = "**Connected Channels:**\n" + "\n".join(channel_list)
     await message.reply(response)
 
-# Command to send a post to all connected channels
-@Client.on_message(filters.command("post"))
+@Client.on_message(filters.command("post") & filters.private)  # Only allow /post in DMs
 async def post_message(client: Client, message: Message):
-    if len(message.command) < 2:
-        await message.reply_text("Usage: /post <message>")
+    # Check if the user is replying to a message
+    if not message.reply_to_message:
+        await message.reply_text("Please reply to a message with /post to copy it to channels.")
         return
 
-    # Extract the message text
-    text = " ".join(message.command[1:])
+    # Get the replied message
+    replied_message = message.reply_to_message
 
-    # Post the message to all channels
+    # Post the replied message to all channels
     messages = []
     for channel in CHANNELS:
-        sent_message = await client.send_message(channel, text)
+        # Check if the replied message contains text
+        if replied_message.text:
+            sent_message = await client.send_message(channel, replied_message.text)
+        # Check if the replied message contains media (photo, video, etc.)
+        elif replied_message.media:
+            sent_message = await replied_message.copy(channel)
+        else:
+            await message.reply_text("Unsupported message type. Only text and media messages are supported.")
+            return
+
+        # Save the message details
         messages.append({"channel_id": channel, "message_id": sent_message.id})
 
     # Save the latest post to the database
