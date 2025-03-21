@@ -26,7 +26,7 @@ async def start(client, message: Message):
     # Welcome message
     txt = (
         f"> **✨👋🏻 Hey {message.from_user.mention} !!**\n"
-        f"**🔋Welcome to the Channel Manager Bot, Manage multiple channels and post messages with ease!**\n\n"
+        f"**Welcome to the Channel Manager Bot, Manage multiple channels and post messages with ease! 😌**\n\n"
         f"> **ᴅᴇᴠᴇʟᴏᴘᴇʀ 🧑🏻‍💻 :- @Axa_bachha**"
     )
     button = InlineKeyboardMarkup([
@@ -202,7 +202,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
     if data == "start":
         txt = (
             f"> **✨👋🏻 Hey {query.from_user.mention} !!**\n"
-            f"**🔋Welcome to the Channel Manager Bot, Manage multiple channels and post messages with ease!**\n\n"
+            f"**Welcome to the Channel Manager Bot, Manage multiple channels and post messages with ease! 😌**\n\n"
             f"> **ᴅᴇᴠᴇʟᴏᴘᴇʀ 🧑🏻‍💻 :- @Axa_bachha**"
         )
         
