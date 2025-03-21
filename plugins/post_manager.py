@@ -48,36 +48,42 @@ async def list_channels(client, message: Message):
     response = "**Connected Channels:**\n" + "\n".join(channel_list)
     await message.reply(response)
 
-@Client.on_message(filters.command("post") & filters.private)  # Only allow /post in DMs
-async def post_message(client: Client, message: Message):
+@Client.on_message(filters.command("post") & filters.private)
+async def send_post(client, message: Message):
     # Check if the user is replying to a message
     if not message.reply_to_message:
-        await message.reply_text("Please reply to a message with /post to copy it to channels.")
+        await message.reply("❌ Reply to a message to post it.")
+        return
+        
+    post_content = message.reply_to_message
+    channels = await db.get_all_channels()
+
+    if not channels:
+        await message.reply("No channels connected yet.")
         return
 
-    # Get the replied message
-    replied_message = message.reply_to_message
+    # List to store sent message details
+    sent_messages = []
 
-    # Post the replied message to all channels
-    messages = []
-    for channel in CHANNELS:
-        # Check if the replied message contains text
-        if replied_message.text:
-            sent_message = await client.send_message(channel, replied_message.text)
-        # Check if the replied message contains media (photo, video, etc.)
-        elif replied_message.media:
-            sent_message = await replied_message.copy(channel)
-        else:
-            await message.reply_text("Unsupported message type. Only text and media messages are supported.")
-            return
+    for channel in channels:
+        try:
+            # Copy the message to the channel
+            sent_message = await client.copy_message(
+                chat_id=channel["_id"],  # Channel ID
+                from_chat_id=message.chat.id,  # User's chat ID
+                message_id=post_content.id  # ID of the replied message
+            )
 
-        # Save the message details
-        messages.append({"channel_id": channel, "message_id": sent_message.id})
+            # Save the sent message details
+            sent_messages.append({"channel_id": channel["_id"], "message_id": sent_message.id})
+        except Exception as e:
+            print(f"Error posting to channel {channel['_id']}: {e}")
+            await message.reply(f"❌ Failed to post to channel {channel['_id']}. Error: {e}")
 
     # Save the latest post to the database
-    await db.save_latest_post(messages)
-    await message.reply_text("Message posted in all channels!")
-
+    await db.save_latest_post(sent_messages)
+    await message.reply("✅ Post sent to all channels!")
+    
 @Client.on_message(filters.command("del_post"))
 async def delete_message(client: Client, message: Message):
     # Retrieve the latest post's messages
