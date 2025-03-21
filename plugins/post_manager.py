@@ -27,7 +27,7 @@ async def start(client, message: Message):
 
     # Welcome message
     txt = (
-        f"> **✨👋🏻 Hey {message.from_user.mention} !!**\n\n"
+        f"> **✨👋🏻 Hey {message.from_user.mention} !!**\n"
         f"**🔋Welcome to the Channel Manager Bot, Manage multiple channels and post messages with ease!**\n\n"
         f"> **ᴅᴇᴠᴇʟᴏᴘᴇʀ 🧑🏻‍💻 :- @Axa_bachha**"
     )
@@ -195,3 +195,65 @@ async def delete_post(client, message: Message):
     await db.delete_post(post_id)
     await message.reply(f"**✅ Post `{post_id}` deleted from all channels!**")
 
+# ========================================= CALLBACKS =============================================
+# Callback Query Handler
+@Client.on_callback_query()
+async def cb_handler(client: Client, query: CallbackQuery):
+    data = query.data
+
+    if data == "start":
+        txt = (
+            f"> **✨👋🏻 Hey {query.from_user.mention} !!**\n"
+            f"**🔋Welcome to the Channel Manager Bot, Manage multiple channels and post messages with ease!**\n\n"
+            f"> **ᴅᴇᴠᴇʟᴏᴘᴇʀ 🧑🏻‍💻 :- @Axa_bachha**"
+        )
+        
+        reply_markup = InlineKeyboardMarkup([
+            [InlineKeyboardButton('📜 ᴀʙᴏᴜᴛ', callback_data='about'),
+             InlineKeyboardButton('🕵🏻‍♀️ ʜᴇʟᴘ', callback_data='help')]
+        ])
+
+    elif data == "help":
+        txt = HELP_TXT
+        reply_markup = InlineKeyboardMarkup([
+            [InlineKeyboardButton("ʀᴇᴏ̨ᴜᴇsᴛ ᴀᴄᴄᴇᴘᴛᴏʀ", callback_data="request"),
+             InlineKeyboardButton('ᴛᴇʟᴇɢʀᴀᴘʜ', callback_data='tele')],
+            [InlineKeyboardButton("ʀᴇsᴛʀɪᴄᴛᴇᴅ ᴄᴏɴᴛᴇɴᴛ sᴀᴠᴇʀ", callback_data="restricted")],
+            [InlineKeyboardButton('🏠 𝙷𝙾𝙼𝙴 🏠', callback_data='start')]
+        ])
+
+    elif data == "about":
+        txt = ABOUT_TXT.format(client.mention)
+        reply_markup = InlineKeyboardMarkup([
+            [InlineKeyboardButton("🤖 ᴅᴇᴠᴇʟᴏᴘᴇʀ", url="https://t.me/axa_bachha"),
+             InlineKeyboardButton("🏠 𝙷𝙾𝙼𝙴 🏠", callback_data="start")]
+        ])
+
+    elif data == "close":
+        try:
+            await query.message.delete()
+            await query.message.reply_to_message.delete()
+        except:
+            await query.message.delete()
+        return
+    
+    elif data == "tele":
+        txt = TELEGRAPH_TXT
+        reply_markup = InlineKeyboardMarkup([
+            [InlineKeyboardButton("◀️ 𝙱𝙰𝙲𝙺", callback_data="help")]
+        ])
+
+    elif data == "restricted":
+        txt = RESTRICTED_TXT
+        reply_markup = InlineKeyboardMarkup([
+            [InlineKeyboardButton("◀️ 𝙱𝙰𝙲𝙺", callback_data="help")]
+        ])
+
+    elif data == "request":
+        txt = REQUEST_TXT
+        reply_markup = InlineKeyboardMarkup([
+            [InlineKeyboardButton("◀️ 𝙱𝙰𝙲𝙺", callback_data="help")]
+        ])
+
+    await query.message.edit_text(text=txt, reply_markup=reply_markup, disable_web_page_preview=True)
+    
