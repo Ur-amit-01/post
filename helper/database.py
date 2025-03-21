@@ -60,41 +60,54 @@ class Database:
         return [channel async for channel in self.channels.find({})]
 
     #============ Post System ============#
-    async def save_latest_post(self, messages):
+    async def save_post(self, post_id, messages):
         """
-        Save the latest post's message IDs and channel IDs.
+        Save a post with a unique ID.
+        :param post_id: Unique ID for the post
         :param messages: List of dictionaries containing channel_id and message_id
         """
         try:
             await self.posts.update_one(
-                {"_id": "latest_post"},
+                {"_id": post_id},
                 {"$set": {"messages": messages}},
                 upsert=True
             )
         except Exception as e:
-            print(f"Error saving latest post: {e}")
+            print(f"Error saving post: {e}")
 
-    async def get_latest_post(self):
+    async def get_post(self, post_id):
         """
-        Retrieve the latest post's message IDs and channel IDs.
+        Retrieve a post by its ID.
+        :param post_id: Unique ID of the post
         :return: List of dictionaries containing channel_id and message_id
         """
         try:
-            post = await self.posts.find_one({"_id": "latest_post"})
+            post = await self.posts.find_one({"_id": post_id})
             return post.get("messages", []) if post else []
         except Exception as e:
-            print(f"Error retrieving latest post: {e}")
+            print(f"Error retrieving post: {e}")
             return []
 
-    async def delete_latest_post(self):
+    async def delete_post(self, post_id):
         """
-        Delete the latest post's data from the database.
+        Delete a post by its ID.
+        :param post_id: Unique ID of the post
         """
         try:
-            await self.posts.delete_one({"_id": "latest_post"})
+            await self.posts.delete_one({"_id": post_id})
         except Exception as e:
-            print(f"Error deleting latest post: {e}")
+            print(f"Error deleting post: {e}")
+
+    async def get_all_posts(self):
+        """
+        Retrieve all posts.
+        :return: List of all posts
+        """
+        try:
+            return [post async for post in self.posts.find({})]
+        except Exception as e:
+            print(f"Error retrieving posts: {e}")
+            return []
 
 # Initialize the database
 db = Database(DB_URL, DB_NAME)
-
