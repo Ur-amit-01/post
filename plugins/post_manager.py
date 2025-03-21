@@ -2,10 +2,19 @@ from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from helper.database import db  # Database helper
 import time
+from config import ADMIN
+
+# Function to check if the user is the admin
+def is_admin(user_id: int) -> bool:
+    return user_id == ADMIN
 
 # Command to add the current channel to the database
 @Client.on_message(filters.command("add") & filters.channel)
 async def add_current_channel(client, message: Message):
+    if not is_admin(message.from_user.id):
+        await message.reply("**Only my owner can access my commands. 🤭**")
+        return
+
     channel_id = message.chat.id
     channel_name = message.chat.title
 
@@ -22,6 +31,10 @@ async def add_current_channel(client, message: Message):
 # Command to remove the current channel from the database
 @Client.on_message(filters.command("rem") & filters.channel)
 async def remove_current_channel(client, message: Message):
+    if not is_admin(message.from_user.id):
+        await message.reply("**Only my owner can access my commands. 🤭**")
+        return
+
     channel_id = message.chat.id
     channel_name = message.chat.title
 
@@ -38,6 +51,10 @@ async def remove_current_channel(client, message: Message):
 # Command to list all connected channels
 @Client.on_message(filters.command("channels") & filters.private)
 async def list_channels(client, message: Message):
+    if not is_admin(message.from_user.id):
+        await message.reply("**Only my owner can access my commands. 🤭**")
+        return
+
     # Retrieve all channels from the database
     channels = await db.get_all_channels()
 
@@ -55,10 +72,13 @@ async def list_channels(client, message: Message):
     )
 
     await message.reply(response)
-    
 
 @Client.on_message(filters.command("post") & filters.private)
 async def send_post(client, message: Message):
+    if not is_admin(message.from_user.id):
+        await message.reply("**Only my owner can access my commands. 🤭**")
+        return
+
     # Check if the user is replying to a message
     if not message.reply_to_message:
         await message.reply("❌ Reply to a message to post it.")
@@ -92,10 +112,19 @@ async def send_post(client, message: Message):
 
     # Save the post with its unique ID
     await db.save_post(post_id, sent_messages)
-    await message.reply(f"**• Post sent to all channels!✅\n• Post ID: `{post_id}` ✍🏻**")
+
+    # Reply with post status and user ID
+    await message.reply(
+        f"**• Post sent to all channels! ✅\n"
+        f"• Post ID: `{post_id}` ✍🏻"
+    )
 
 @Client.on_message(filters.command("del_post") & filters.private)
 async def delete_post(client, message: Message):
+    if not is_admin(message.from_user.id):
+        await message.reply("**Only my owner can access my commands. 🤭**")
+        return
+
     # Check if the user provided a post ID
     if len(message.command) < 2:
         await message.reply("**Usage: /del_post <post_id>**")
@@ -131,4 +160,3 @@ async def delete_post(client, message: Message):
     # Delete the post from the database
     await db.delete_post(post_id)
     await message.reply(f"**✅ Post `{post_id}` deleted from all channels!**")
-
