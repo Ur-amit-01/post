@@ -23,7 +23,8 @@ async def start(client, message):
     
     txt = (
         f"> **✨👋🏻 Hey {message.from_user.mention} !!**\n\n"
-        f"**🔋 I am a simple bot that can post and delete messages in a single command.**\n\n"
+        f"**🔋Welcome to the Channel Manager Bot**\n"
+        f"**📢 Manage multiple channels and post messages with ease!**\n\n"
         f"> **ᴅᴇᴠᴇʟᴏᴘᴇʀ 🧑🏻‍💻 :- @Axa_bachha**"
     )
     button = InlineKeyboardMarkup([
@@ -60,8 +61,8 @@ async def cb_handler(client: Client, query: CallbackQuery):
     if data == "start":
         txt = (
             f"> **✨👋🏻 Hey {query.from_user.mention} !!**\n\n"
-            f"**🔋 ɪ ᴀᴍ ᴀɴ ᴀᴅᴠᴀɴᴄᴇ ʙᴏᴛ ᴅᴇꜱɪɢɴᴇᴅ ᴛᴏ ᴀꜱꜱɪꜱᴛ ʏᴏᴜ. ɪ ᴄᴀɴ ᴍᴇʀɢᴇ ᴘᴅꜰ/ɪᴍᴀɢᴇꜱ , ʀᴇɴᴀᴍᴇ ʏᴏᴜʀ ꜰɪʟᴇꜱ ᴀɴᴅ ᴍᴜᴄʜ ᴍᴏʀᴇ.**\n\n"
-            f"**🔘 ᴄʟɪᴄᴋ ᴏɴ ʜᴇʟᴘ ʙᴜᴛᴛᴏɴ ᴛᴏ ʟᴇᴀʀɴ ᴍᴏʀᴇ ᴀʙᴏᴜᴛ ᴍʏ ғᴜɴᴄᴛɪᴏɴs!**\n\n"
+            f"**🔋Welcome to the Channel Manager Bot**\n"
+            f"**📢 Manage multiple channels and post messages with ease!**\n\n"
             f"> **ᴅᴇᴠᴇʟᴏᴘᴇʀ 🧑🏻‍💻 :- @Axa_bachha**"
         )
         
