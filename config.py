@@ -5,9 +5,9 @@ id_pattern = re.compile(r'^.\d+$')
 
 API_ID = os.environ.get("API_ID", "22012880")
 API_HASH = os.environ.get("API_HASH", "5b0e07f5a96d48b704eb9850d274fe1d")
-BOT_TOKEN = os.environ.get("BOT_TOKEN", "") 
+BOT_TOKEN = os.environ.get("BOT_TOKEN", "7821967646:AAFHUS91204U6P6xqnBOdAefk42agRWzTc0") 
 
-DB_NAME = os.environ.get("DB_NAME","Post_manager")     
+DB_NAME = os.environ.get("DB_NAME","SAT_manager")     
 DB_URL = os.environ.get("DB_URL","")
 
 ADMIN = [int(admin) if id_pattern.search(admin) else admin for admin in os.environ.get('ADMIN', '6803505727').split()]
