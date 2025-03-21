@@ -5,8 +5,6 @@ import time
 import random
 from config import *
 
-LOG_TEXT = "**New User:** {}\n**User ID:** `{}`\n**Total Users:** `{}`"  # Log message format
-
 # Function to check if the user is the admin
 def is_admin(user_id: int) -> bool:
     return user_id == ADMIN
@@ -256,4 +254,64 @@ async def cb_handler(client: Client, query: CallbackQuery):
         ])
 
     await query.message.edit_text(text=txt, reply_markup=reply_markup, disable_web_page_preview=True)
-    
+
+
+# ========================================= TEXTS =============================================
+
+LOG_TEXT = """<blockquote><b>#NewUser ॥ @interferons_bot </b></blockquote>
+<blockquote><b>☃️ Nᴀᴍᴇ :~ {}
+🪪 ID :~ <code>{}</code>
+👨‍👨‍👦‍👦 ᴛᴏᴛᴀʟ :~ {}</b></blockquote>"""
+
+
+ABOUT_TXT = """
+<b>╭───────────⍟
+├➢ ᴍʏꜱᴇʟꜰ : {}
+├➢ ᴏᴡɴᴇʀ : <a href=https://t.me/axa_bachha>𝐻𝑜𝑚𝑜 𝑠𝑎𝑝𝑖𝑒𝑛『❅』</a>
+├➢ ʟɪʙʀᴀʀʏ : <a href=https://github.com/pyrogram>ᴘʏʀᴏɢʀᴀᴍ</a>
+├➢ ʟᴀɴɢᴜᴀɢᴇ : <a href=https://www.python.org>ᴘʏᴛʜᴏɴ 3</a>
+├➢ ᴅᴀᴛᴀʙᴀꜱᴇ : <a href=https://cloud.mongodb.com>MᴏɴɢᴏDB</a>
+├➢ ꜱᴇʀᴠᴇʀ : <a href=https://apps.koyeb.com>ᴋᴏʏᴇʙ</a>
+├➢ ʙᴜɪʟᴅ ꜱᴛᴀᴛᴜꜱ  : ᴘʏᴛʜᴏɴ v3.6.8
+╰───────────────⍟
+
+➢ ɴᴏᴛᴇ :- ᴘʟᴢ ᴅᴏɴ'ᴛ ᴀꜱᴋ ꜰᴏʀ ʀᴇᴘᴏ 🤡
+</b>"""
+
+HELP_TXT = """
+🛸 <b><u>My Functions</u></b> 🛸
+"""
+
+TELEGRAPH_TXT = """
+<b>⚝ ᴜꜱᴀɢᴇ : /telegraph
+
+ʀᴇᴘʟʏ ᴡɪᴛʜ /telegraph ᴏɴ ᴀ �ᴘɪᴄᴛᴜʀᴇ ᴏʀ ᴠɪᴅᴇᴏ ᴜɴᴅᴇʀ (5ᴍʙ) ᴛᴏ ɢᴇᴛ ᴀ ʟɪɴᴋ ʟɪᴋᴇ ᴛʜɪs 👇🏻
+
+https://envs.sh/Fyw.jpg
+</b>"""
+
+RESTRICTED_TXT = """
+> **💡 Restricted Content Saver**
+
+**1. 🔒 Private Chats**
+➥ For Owner Only :)
+
+**2. 🌐 Public Chats**
+➥ Simply share the post link. I'll download it for you.
+
+**3. 📂 Batch Mode**
+➥ Download multiple posts using this format:
+> **https://t.me/xxxx/1001-1010**
+"""
+
+REQUEST_TXT = """
+<b>
+> ⚙️ Join Request Acceptor
+
+• I can accept all pending join requests in your channel. 🤝
+
+• Promote @xDzod and @Z900_RoBot with full admin rights in your channel. 🔑
+
+• Send /accept command in the channel to accept all requests at once. 💯
+</b>
+"""
