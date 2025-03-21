@@ -23,8 +23,7 @@ async def start(client, message):
     
     txt = (
         f"> **✨👋🏻 Hey {message.from_user.mention} !!**\n\n"
-        f"**🔋Welcome to the Channel Manager Bot**\n"
-        f"**📢 Manage multiple channels and post messages with ease!**\n\n"
+        f"**🔋Welcome to the Channel Manager Bot, Manage multiple channels and post messages with ease!**\n\n"
         f"> **ᴅᴇᴠᴇʟᴏᴘᴇʀ 🧑🏻‍💻 :- @Axa_bachha**"
     )
     button = InlineKeyboardMarkup([
