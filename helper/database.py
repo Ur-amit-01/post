@@ -42,7 +42,7 @@ class Database:
     async def delete_user(self, user_id):
         await self.col.delete_many({'_id': int(user_id)})
 
-    # Channel System
+    #============ Channel System ============#
     async def add_channel(self, channel_id, channel_name=None):
         channel_id = int(channel_id)
         if not await self.is_channel_exist(channel_id):
@@ -59,20 +59,42 @@ class Database:
     async def get_all_channels(self):
         return [channel async for channel in self.channels.find({})]
 
-    # Post System
+    #============ Post System ============#
     async def save_latest_post(self, messages):
-        await self.posts.update_one(
-            {"_id": "latest_post"},
-            {"$set": {"messages": messages}},
-            upsert=True
-        )
+        """
+        Save the latest post's message IDs and channel IDs.
+        :param messages: List of dictionaries containing channel_id and message_id
+        """
+        try:
+            await self.posts.update_one(
+                {"_id": "latest_post"},
+                {"$set": {"messages": messages}},
+                upsert=True
+            )
+        except Exception as e:
+            print(f"Error saving latest post: {e}")
 
     async def get_latest_post(self):
-        post = await self.posts.find_one({"_id": "latest_post"})
-        return post.get("messages", {}) if post else {}
+        """
+        Retrieve the latest post's message IDs and channel IDs.
+        :return: List of dictionaries containing channel_id and message_id
+        """
+        try:
+            post = await self.posts.find_one({"_id": "latest_post"})
+            return post.get("messages", []) if post else []
+        except Exception as e:
+            print(f"Error retrieving latest post: {e}")
+            return []
 
     async def delete_latest_post(self):
-        await self.posts.delete_one({"_id": "latest_post"})
+        """
+        Delete the latest post's data from the database.
+        """
+        try:
+            await self.posts.delete_one({"_id": "latest_post"})
+        except Exception as e:
+            print(f"Error deleting latest post: {e}")
 
 # Initialize the database
 db = Database(DB_URL, DB_NAME)
+
