@@ -214,8 +214,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
     elif data == "help":
         txt = HELP_TXT
         reply_markup = InlineKeyboardMarkup([
-            [InlineKeyboardButton("ʀᴇᴏ̨ᴜᴇsᴛ ᴀᴄᴄᴇᴘᴛᴏʀ", callback_data="request"),
-             InlineKeyboardButton('ᴛᴇʟᴇɢʀᴀᴘʜ', callback_data='tele')],
+            [InlineKeyboardButton("ʀᴇᴏ̨ᴜᴇsᴛ ᴀᴄᴄᴇᴘᴛᴏʀ", callback_data="request")],
             [InlineKeyboardButton("ʀᴇsᴛʀɪᴄᴛᴇᴅ ᴄᴏɴᴛᴇɴᴛ sᴀᴠᴇʀ", callback_data="restricted")],
             [InlineKeyboardButton('🏠 𝙷𝙾𝙼𝙴 🏠', callback_data='start')]
         ])
@@ -275,26 +274,19 @@ ABOUT_TXT = """
 ├➢ ʙᴜɪʟᴅ ꜱᴛᴀᴛᴜꜱ  : ᴘʏᴛʜᴏɴ v3.6.8
 ╰───────────────⍟
 
-➢ ɴᴏᴛᴇ :- ᴘʟᴢ ᴅᴏɴ'ᴛ ᴀꜱᴋ ꜰᴏʀ ʀᴇᴘᴏ 🤡
+➢ ɴᴏᴛᴇ :- ʀᴇᴘᴏ ɪꜱ ᴘᴀɪᴅ, ᴅᴏɴ'ᴛ ᴅᴍ ꜰᴏʀ ᴛɪᴍᴇᴘᴀꜱꜱ 🙏🏻
 </b>"""
 
 HELP_TXT = """
 🛸 <b><u>My Functions</u></b> 🛸
 """
 
-TELEGRAPH_TXT = """
-<b>⚝ ᴜꜱᴀɢᴇ : /telegraph
-
-ʀᴇᴘʟʏ ᴡɪᴛʜ /telegraph ᴏɴ ᴀ �ᴘɪᴄᴛᴜʀᴇ ᴏʀ ᴠɪᴅᴇᴏ ᴜɴᴅᴇʀ (5ᴍʙ) ᴛᴏ ɢᴇᴛ ᴀ ʟɪɴᴋ ʟɪᴋᴇ ᴛʜɪs 👇🏻
-
-https://envs.sh/Fyw.jpg
-</b>"""
 
 RESTRICTED_TXT = """
 > **💡 Restricted Content Saver**
 
 **1. 🔒 Private Chats**
-➥ For Owner Only :)
+➥ For My Owner Only :)
 
 **2. 🌐 Public Chats**
 ➥ Simply share the post link. I'll download it for you.
