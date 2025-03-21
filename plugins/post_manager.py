@@ -36,7 +36,7 @@ async def start(client, message: Message):
         await message.reply_text(text=txt, reply_markup=button, disable_web_page_preview=True)
 
 # Command to add the current channel to the database
-@Client.on_message(filters.command("add") & filters.channel & filters.user(ADMIN))
+@Client.on_message(filters.command("add") & filters.channel)
 async def add_current_channel(client, message: Message):
 
     channel_id = message.chat.id
@@ -53,7 +53,7 @@ async def add_current_channel(client, message: Message):
         await message.reply("❌ Failed to add channel. Contact developer.")
 
 # Command to remove the current channel from the database
-@Client.on_message(filters.command("rem") & filters.channel & filters.user(ADMIN))
+@Client.on_message(filters.command("rem") & filters.channel)
 async def remove_current_channel(client, message: Message):
 
     channel_id = message.chat.id
@@ -77,13 +77,13 @@ async def list_channels(client, message: Message):
     channels = await db.get_all_channels()
 
     if not channels:
-        await message.reply("No channels connected yet.")
+        await message.reply("**No channels connected yet.🙁**")
         return
 
     total_channels = len(channels)
 
     # Format the list of channels
-    channel_list = [f"📢 **{channel['name']}** (`{channel['_id']}`)" for channel in channels]
+    channel_list = [f"📢 **{channel['name']}** :- `{channel['_id']}`" for channel in channels]
     response = (
         f"> **Total Channels :- ({total_channels})**\n\n"  # Add total count here
         + "\n".join(channel_list)
@@ -96,14 +96,14 @@ async def send_post(client, message: Message):
 
     # Check if the user is replying to a message
     if not message.reply_to_message:
-        await message.reply("❌ Reply to a message to post it.")
+        await message.reply("**Reply to a message to post it.**")
         return
 
     post_content = message.reply_to_message
     channels = await db.get_all_channels()
 
     if not channels:
-        await message.reply("No channels connected yet.")
+        await message.reply("**No channels connected yet.**")
         return
 
     # Generate a unique post ID (using timestamp)
@@ -132,7 +132,6 @@ async def send_post(client, message: Message):
     await message.reply(
         f"**• Post sent to all channels! ✅\n"
         f"• Post ID: `{post_id}` ✍🏻\n"
-        f"• User ID: `{message.from_user.id}`**"
     )
 
 @Client.on_message(filters.command("del_post") & filters.private & filters.user(ADMIN))
