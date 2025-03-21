@@ -5,8 +5,42 @@ class Database:
     def __init__(self, uri, database_name):
         self._client = motor.motor_asyncio.AsyncIOMotorClient(uri)
         self.db = self._client[database_name]
+        self.col = self.db.user  # Collection for users
         self.channels = self.db.channels  # Collection for channels
+        self.formatting = self.db.formatting  # Collection for formatting templates
+        self.admins = self.db.admins  # Collection for admins
         self.posts = self.db.posts  # Collection for posts
+
+    #============ User System ============#
+    def new_user(self, id):
+        return dict(
+            _id=int(id),
+            file_id=None,
+            caption=None,
+            prefix=None,
+            suffix=None,
+            metadata=False,
+            metadata_code="By :- @Madflix_Bots"
+        )
+
+    async def add_user(self, id):
+        if not await self.is_user_exist(id):
+            user = self.new_user(id)
+            await self.col.insert_one(user)
+
+    async def is_user_exist(self, id):
+        user = await self.col.find_one({'_id': int(id)})
+        return bool(user)
+
+    async def total_users_count(self):
+        count = await self.col.count_documents({})
+        return count
+
+    async def get_all_users(self):
+        return self.col.find({})
+
+    async def delete_user(self, user_id):
+        await self.col.delete_many({'_id': int(user_id)})
 
     # Channel System
     async def add_channel(self, channel_id, channel_name=None):
