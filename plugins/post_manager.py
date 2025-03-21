@@ -12,7 +12,7 @@ async def add_current_channel(client, message: Message):
     try:
         added = await db.add_channel(channel_id, channel_name)
         if added:
-            await message.reply(f"✅ Channel '{channel_name}' added!")
+            await message.reply(f"**Channel '{channel_name}' added! ✅**")
         else:
             await message.reply(f"ℹ️ Channel '{channel_name}' already exists.")
     except Exception as e:
@@ -28,7 +28,7 @@ async def remove_current_channel(client, message: Message):
     try:
         if await db.is_channel_exist(channel_id):
             await db.delete_channel(channel_id)
-            await message.reply(f"✅ Channel '{channel_name}' removed!")
+            await message.reply(f"**Channel '{channel_name}' removed from my database!**")
         else:
             await message.reply(f"ℹ️ Channel '{channel_name}' not found.")
     except Exception as e:
@@ -47,7 +47,7 @@ async def list_channels(client, message: Message):
     channel_list = [f"📢 **{channel['name']}** (`{channel['_id']}`)" for channel in channels]
     response = "**Connected Channels:**\n" + "\n".join(channel_list)
     await message.reply(response)
-
+    
 
 @Client.on_message(filters.command("post") & filters.private)
 async def send_post(client, message: Message):
@@ -56,20 +56,17 @@ async def send_post(client, message: Message):
         await message.reply("❌ Reply to a message to post it.")
         return
 
-    # Get the replied message
     post_content = message.reply_to_message
-
-    # Retrieve all channels from the database
     channels = await db.get_all_channels()
 
     if not channels:
         await message.reply("No channels connected yet.")
         return
 
-    # List to store sent message details
+    # Generate a unique post ID (using timestamp)
+    post_id = int(time.time())
     sent_messages = []
 
-    # Post the replied message to all channels
     for channel in channels:
         try:
             # Copy the message to the channel
@@ -85,21 +82,35 @@ async def send_post(client, message: Message):
             print(f"Error posting to channel {channel['_id']}: {e}")
             await message.reply(f"❌ Failed to post to channel {channel['_id']}. Error: {e}")
 
-    # Save the latest post to the database
-    await db.save_latest_post(sent_messages)
-    await message.reply("✅ Post sent to all channels!")
+    # Save the post with its unique ID
+    await db.save_post(post_id, sent_messages)
+    await message.reply(f"**• Post sent to all channels!✅\n• Post ID: `{post_id}` ✍🏻**")
 
-@Client.on_message(filters.command("delete") & filters.private)
+@Client.on_message(filters.command("del_post") & filters.private)
 async def delete_post(client, message: Message):
-    # Retrieve the latest post's details from the database
-    latest_post = await db.get_latest_post()
+    # Check if the user provided a post ID
+    if len(message.command) < 2:
+        await message.reply("**Usage: /del_post <post_id>**")
+        return
 
-    if not latest_post:
-        await message.reply("❌ No posts to delete.")
+    # Extract the post ID
+    post_id = message.command[1]
+
+    try:
+        post_id = int(post_id)  # Convert to integer
+    except ValueError:
+        await message.reply("❌ Invalid post ID. Please provide a valid integer.")
+        return
+
+    # Retrieve the post's details from the database
+    post = await db.get_post(post_id)
+
+    if not post:
+        await message.reply(f"❌ No post found with ID `{post_id}`.")
         return
 
     # Delete the messages from all channels
-    for msg in latest_post:
+    for msg in post:
         try:
             await client.delete_messages(
                 chat_id=msg["channel_id"],  # Channel ID
@@ -109,6 +120,6 @@ async def delete_post(client, message: Message):
             print(f"Error deleting message from channel {msg['channel_id']}: {e}")
             await message.reply(f"❌ Failed to delete message from channel {msg['channel_id']}. Error: {e}")
 
-    # Clear the latest post from the database
-    await db.delete_latest_post()
-    await message.reply("✅ Post deleted from all channels!")
+    # Delete the post from the database
+    await db.delete_post(post_id)
+    await message.reply(f"**✅ Post `{post_id}` deleted from all channels!**")
