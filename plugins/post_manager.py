@@ -5,10 +5,6 @@ import time
 import random
 from config import *
 
-# Function to check if the user is the admin
-def is_admin(user_id: int) -> bool:
-    return user_id == ADMIN
-
 # Command to start the bot (public command)
 @Client.on_message(filters.private & filters.command("start"))
 async def start(client, message: Message):
@@ -40,11 +36,8 @@ async def start(client, message: Message):
         await message.reply_text(text=txt, reply_markup=button, disable_web_page_preview=True)
 
 # Command to add the current channel to the database
-@Client.on_message(filters.command("add") & filters.channel)
+@Client.on_message(filters.command("add") & filters.channel & filters.user(ADMIN))
 async def add_current_channel(client, message: Message):
-    if not is_admin(message.from_user.id):
-        await message.reply("❌ Only my owner can use me.")
-        return
 
     channel_id = message.chat.id
     channel_name = message.chat.title
@@ -60,11 +53,8 @@ async def add_current_channel(client, message: Message):
         await message.reply("❌ Failed to add channel. Contact developer.")
 
 # Command to remove the current channel from the database
-@Client.on_message(filters.command("rem") & filters.channel)
+@Client.on_message(filters.command("rem") & filters.channel & filters.user(ADMIN))
 async def remove_current_channel(client, message: Message):
-    if not is_admin(message.from_user.id):
-        await message.reply("❌ Only my owner can use me.")
-        return
 
     channel_id = message.chat.id
     channel_name = message.chat.title
@@ -80,11 +70,8 @@ async def remove_current_channel(client, message: Message):
         await message.reply("❌ Failed to remove channel. Try again.")
 
 # Command to list all connected channels
-@Client.on_message(filters.command("channels") & filters.private)
+@Client.on_message(filters.command("channels") & filters.private & filters.user(ADMIN))
 async def list_channels(client, message: Message):
-    if not is_admin(message.from_user.id):
-        await message.reply("❌ Only my owner can use me.")
-        return
 
     # Retrieve all channels from the database
     channels = await db.get_all_channels()
@@ -104,11 +91,8 @@ async def list_channels(client, message: Message):
 
     await message.reply(response)
 
-@Client.on_message(filters.command("post") & filters.private)
+@Client.on_message(filters.command("post") & filters.private & filters.user(ADMIN))
 async def send_post(client, message: Message):
-    if not is_admin(message.from_user.id):
-        await message.reply("❌ Only my owner can use me.")
-        return
 
     # Check if the user is replying to a message
     if not message.reply_to_message:
@@ -151,11 +135,8 @@ async def send_post(client, message: Message):
         f"• User ID: `{message.from_user.id}`**"
     )
 
-@Client.on_message(filters.command("del_post") & filters.private)
+@Client.on_message(filters.command("del_post") & filters.private & filters.user(ADMIN))
 async def delete_post(client, message: Message):
-    if not is_admin(message.from_user.id):
-        await message.reply("❌ Only my owner can use me.")
-        return
 
     # Check if the user provided a post ID
     if len(message.command) < 2:
@@ -224,20 +205,6 @@ async def cb_handler(client: Client, query: CallbackQuery):
         reply_markup = InlineKeyboardMarkup([
             [InlineKeyboardButton("🤖 ᴅᴇᴠᴇʟᴏᴘᴇʀ", url="https://t.me/axa_bachha"),
              InlineKeyboardButton("🏠 𝙷𝙾𝙼𝙴 🏠", callback_data="start")]
-        ])
-
-    elif data == "close":
-        try:
-            await query.message.delete()
-            await query.message.reply_to_message.delete()
-        except:
-            await query.message.delete()
-        return
-    
-    elif data == "tele":
-        txt = TELEGRAPH_TXT
-        reply_markup = InlineKeyboardMarkup([
-            [InlineKeyboardButton("◀️ 𝙱𝙰𝙲𝙺", callback_data="help")]
         ])
 
     elif data == "restricted":
