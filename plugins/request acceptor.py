@@ -1,20 +1,8 @@
 import os
 import asyncio
 from pyrogram import Client, filters, enums
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from config import API_ID, API_HASH, BOT_TOKEN, NEW_REQ_MODE, SESSION_STRING
-import logging
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('join_request_bot.log'),
-        logging.StreamHandler()
-    ]
-)
-logger = logging.getLogger(__name__)
 
 @Client.on_message(filters.command('accept'))
 async def accept(client, message):
@@ -50,48 +38,21 @@ async def accept(client, message):
     except Exception as e:
         await msg.edit(f"⚠️ **An error occurred:** {str(e)}")
 
-@Client.on_chat_join_request(filters.group | filters.channel)
-async def approve_new(client: Client, message: Message):
-    if not NEW_REQ_MODE:
-        return
 
-    user = message.from_user
-    chat = message.chat
+@Client.on_chat_join_request(filters.group | filters.channel)
+async def approve_new(client, m):
+    if not NEW_REQ_MODE:
+        return  # If NEW_REQ_MODE is False, the function exits without processing the join request.
 
     try:
-        # Approve the request first
-        await client.approve_chat_join_request(chat.id, user.id)
-        logger.info(f"Approved join request for user {user.id} in chat {chat.id}")
-
+        await client.approve_chat_join_request(m.chat.id, m.from_user.id)
         try:
-            # Generate the appropriate channel link
-            if chat.username:
-                # Public channel
-                channel_link = f"https://t.me/{chat.username}"
-            else:
-                # Private channel - convert ID to t.me/c/ format
-                if str(chat.id).startswith("-100"):
-                    channel_id = str(chat.id).replace("-100", "")
-                else:
-                    channel_id = str(chat.id)
-                channel_link = f"https://t.me/c/{channel_id}"
-
-            welcome_message = (
-                f"**• Hello {user.mention}! 👋🏻\n"
-                f"**• Your join request for [{chat.title}]({channel_link}) has been accepted. 💕**\n\n"
-                f"> **• Powered by: @Stellar_Bots ✨ @Team_SAT_25**"
-            )
-
             await client.send_message(
-                user.id,
-                welcome_message,
-                disable_web_page_preview=True,
-                parse_mode=enums.ParseMode.MARKDOWN
+                m.from_user.id,
+                f"**• Hello {m.from_user.mention}! 👋🏻\n• Your request for {m.chat.title} is accepted.**\n\n> **• Powered by: @Stellar_Bots x @Team_SAT_25**"
             )
-            logger.info(f"Sent welcome message to user {user.id}")
-
-        except Exception as e:
-            logger.error(f"Failed to send welcome message to user {user.id}: {str(e)}", exc_info=True)
-
+        except:
+            pass
     except Exception as e:
-        logger.error(f"Failed to approve join request for user {user.id} in chat {chat.id}: {str(e)}", exc_info=True)
+        print(f"⚠️ {str(e)}")
+        pass
