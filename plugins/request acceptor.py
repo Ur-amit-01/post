@@ -38,21 +38,48 @@ async def accept(client, message):
     except Exception as e:
         await msg.edit(f"⚠️ **An error occurred:** {str(e)}")
 
-
 @Client.on_chat_join_request(filters.group | filters.channel)
-async def approve_new(client, m):
+async def approve_new(client: Client, message: Message):
     if not NEW_REQ_MODE:
-        return  # If NEW_REQ_MODE is False, the function exits without processing the join request.
+        return
+
+    user = message.from_user
+    chat = message.chat
 
     try:
-        await client.approve_chat_join_request(m.chat.id, m.from_user.id)
+        # Approve the request first
+        await client.approve_chat_join_request(chat.id, user.id)
+        logger.info(f"Approved join request for user {user.id} in chat {chat.id}")
+
         try:
-            await client.send_message(
-                m.from_user.id,
-                f"👋 **Hello {m.from_user.mention}!\nWelcome to {m.chat.title}**\n\n> **• Powered by: @Stellar_Bots x @Team_SAT_25**"
+            # Generate the appropriate channel link
+            if chat.username:
+                # Public channel
+                channel_link = f"https://t.me/{chat.username}"
+            else:
+                # Private channel - convert ID to t.me/c/ format
+                if str(chat.id).startswith("-100"):
+                    channel_id = str(chat.id).replace("-100", "")
+                else:
+                    channel_id = str(chat.id)
+                channel_link = f"https://t.me/c/{channel_id}"
+
+            welcome_message = (
+                f"**• Hello {user.mention}! 👋🏻\n"
+                f"**• Your join request for [{chat.title}]({channel_link}) has been accepted. 💕**\n\n"
+                f"> **• Powered by: @Stellar_Bots ✨ @Team_SAT_25**"
             )
-        except:
-            pass
+
+            await client.send_message(
+                user.id,
+                welcome_message,
+                disable_web_page_preview=True,
+                parse_mode=enums.ParseMode.MARKDOWN
+            )
+            logger.info(f"Sent welcome message to user {user.id}")
+
+        except Exception as e:
+            logger.error(f"Failed to send welcome message to user {user.id}: {str(e)}", exc_info=True)
+
     except Exception as e:
-        print(f"⚠️ {str(e)}")
-        pass
+        logger.error(f"Failed to approve join request for user {user.id} in chat {chat.id}: {str(e)}", exc_info=True)
