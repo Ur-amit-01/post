@@ -129,7 +129,7 @@ async def send_post(client, message: Message):
     total_channels = len(channels)
 
     # Send initial processing message
-    processing_msg = await message.reply(f"📤 Posting to {total_channels} channels...")
+    processing_msg = await message.reply(f"📤 Posting to {total_channels} channels...", reply_to_message_id=post_content.id)
 
     for channel in channels:
         try:
@@ -190,15 +190,6 @@ async def send_post(client, message: Message):
 
     # Edit the processing message with final result
     await processing_msg.edit_text(result_msg)
-
-    # Send additional copy of the post ID for easy reference
-    if sent_messages:
-        await message.reply(
-            f"📋 <b>Post Summary</b>\n"
-            f"• <b>ID:</b> <code>{post_id}</code>\n"
-            f"• <b>Preview:</b>",
-            reply_to_message_id=post_content.id
-        )
 
 async def schedule_deletion(client, channel_id, message_id, delay_seconds, user_id, post_id, channel_name):
     """Schedule a message for deletion after a delay"""
