@@ -3,23 +3,23 @@ from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, 
 from helper.database import db  # Database helper
 import time
 import random
-import asyncio
-from datetime import datetime, timedelta
 from config import *
 
 # Command to start the bot (public command)
 @Client.on_message(filters.private & filters.command("start"))
 async def start(client, message: Message):
     try:
-        await message.react(emoji=random.choice(REACTIONS), big=True)
+        await message.react(emoji=random.choice(REACTIONS), big=True)  # React with a random emoji
     except:
         pass
 
+    # Add user to the database if they don't exist
     if not await db.is_user_exist(message.from_user.id):
         await db.add_user(message.from_user.id)
         total_users = await db.total_users_count()
         await client.send_message(LOG_CHANNEL, LOG_TEXT.format(message.from_user.mention, message.from_user.id, total_users))
 
+    # Welcome message
     txt = (
         f"> **✨👋🏻 Hey {message.from_user.mention} !!**\n"
         f"**Welcome to the Channel Manager Bot, Manage multiple channels and post messages with ease! 😌**\n\n"
@@ -29,13 +29,16 @@ async def start(client, message: Message):
         [InlineKeyboardButton('📜 ᴀʙᴏᴜᴛ', callback_data='about'), InlineKeyboardButton('🕵🏻‍♀️ ʜᴇʟᴘ', callback_data='help')]
     ])
 
+    # Send the start message with or without a picture
     if START_PIC:
         await message.reply_photo(START_PIC, caption=txt, reply_markup=button)
     else:
         await message.reply_text(text=txt, reply_markup=button, disable_web_page_preview=True)
 
+# Command to add the current channel to the database
 @Client.on_message(filters.command("add") & filters.channel)
 async def add_current_channel(client, message: Message):
+
     channel_id = message.chat.id
     channel_name = message.chat.title
 
@@ -49,8 +52,10 @@ async def add_current_channel(client, message: Message):
         print(f"Error adding channel: {e}")
         await message.reply("❌ Failed to add channel. Contact developer.")
 
+# Command to remove the current channel from the database
 @Client.on_message(filters.command("rem") & filters.channel)
 async def remove_current_channel(client, message: Message):
+
     channel_id = message.chat.id
     channel_name = message.chat.title
 
@@ -64,8 +69,11 @@ async def remove_current_channel(client, message: Message):
         print(f"Error removing channel: {e}")
         await message.reply("❌ Failed to remove channel. Try again.")
 
+# Command to list all connected channels
 @Client.on_message(filters.command("channels") & filters.private & filters.user(ADMIN))
 async def list_channels(client, message: Message):
+
+    # Retrieve all channels from the database
     channels = await db.get_all_channels()
 
     if not channels:
@@ -73,116 +81,52 @@ async def list_channels(client, message: Message):
         return
 
     total_channels = len(channels)
+
+    # Format the list of channels
     channel_list = [f"📢 **{channel['name']}** :- `{channel['_id']}`" for channel in channels]
     response = (
-        f"> **Total Channels :- ({total_channels})**\n\n"
+        f"> **Total Channels :- ({total_channels})**\n\n"  # Add total count here
         + "\n".join(channel_list)
     )
 
     await message.reply(response)
 
-async def delete_post_after_delay(client, post_id, delay_seconds, owner_id):
-    await asyncio.sleep(delay_seconds)
-    
-    post = await db.get_post(post_id)
-    if not post:
-        return
-    
-    deleted_channels = []
-    failed_channels = []
-    
-    for msg in post['messages']:
-        try:
-            await client.delete_messages(
-                chat_id=msg["channel_id"],
-                message_ids=msg["message_id"]
-            )
-            channel = await db.get_channel(msg["channel_id"])
-            if channel:
-                deleted_channels.append(channel['name'])
-        except Exception as e:
-            print(f"Error deleting message from channel {msg['channel_id']}: {e}")
-            channel = await db.get_channel(msg["channel_id"])
-            if channel:
-                failed_channels.append(channel['name'])
-    
-    await db.delete_post(post_id)
-    
-    # Send confirmation to owner
-    confirmation_msg = "⏰ **Auto-Deletion Complete**\n\n"
-    if deleted_channels:
-        confirmation_msg += f"✅ Successfully deleted from:\n- " + "\n- ".join(deleted_channels) + "\n\n"
-    if failed_channels:
-        confirmation_msg += f"❌ Failed to delete from:\n- " + "\n- ".join(failed_channels)
-    
-    try:
-        await client.send_message(owner_id, confirmation_msg)
-    except Exception as e:
-        print(f"Error sending deletion confirmation: {e}")
-
-def parse_time(time_str):
-    try:
-        # Handle formats like "9h", "30m", "1d", "45s"
-        if time_str[-1].isdigit():
-            return int(time_str), "hour"  # Default to hours if no unit specified
-        
-        unit = time_str[-1].lower()
-        value = int(time_str[:-1])
-        
-        if unit == 'h':
-            return value * 3600, "hour"
-        elif unit == 'm':
-            return value * 60, "minute"
-        elif unit == 'd':
-            return value * 86400, "day"
-        elif unit == 's':
-            return value, "second"
-        else:
-            return None, None
-    except:
-        return None, None
-
 @Client.on_message(filters.command("post") & filters.private & filters.user(ADMIN))
 async def send_post(client, message: Message):
+    # Check if the user is replying to a message
     if not message.reply_to_message:
         await message.reply("**Reply to a message to post it.**")
         return
 
+    # Parse time delay if provided (format: /post 1hour, /post 30min, etc.)
     delete_after = None
-    time_unit = None
-    
     if len(message.command) > 1:
-        # Try parsing compact format first (e.g., "9h", "30m")
-        time_str = " ".join(message.command[1:])
-        seconds, time_unit = parse_time(time_str)
-        
-        if seconds is None:
-            # Try parsing spaced format (e.g., "9 hour", "30 min")
-            try:
-                time_value = int(message.command[1])
-                if len(message.command) > 2:
-                    time_unit = message.command[2].lower()
-                else:
-                    time_unit = "hour"  # Default unit
-                
-                if time_unit in ["hour", "hours", "h"]:
-                    seconds = time_value * 3600
-                elif time_unit in ["minute", "minutes", "min", "m"]:
-                    seconds = time_value * 60
-                elif time_unit in ["day", "days", "d"]:
-                    seconds = time_value * 86400
-                elif time_unit in ["second", "seconds", "sec", "s"]:
-                    seconds = time_value
-                else:
-                    raise ValueError("Invalid time unit")
-            except (ValueError, IndexError):
-                await message.reply("❌ Invalid time format. Use: /post [time][unit] or /post [time] [unit]\nExamples:\n/post 9h\n/post 30m\n/post 1d\n/post 45s\n/post 2 hour")
+        time_input = message.command[1].lower()
+        try:
+            # Extract number and unit
+            num = int(''.join(filter(str.isdigit, time_input)))
+            unit = ''.join(filter(str.isalpha, time_input))
+            
+            # Convert to seconds
+            if 'sec' in unit:
+                delete_after = num
+            elif 'min' in unit:
+                delete_after = num * 60
+            elif 'hour' in unit:
+                delete_after = num * 3600
+            elif 'day' in unit:
+                delete_after = num * 86400
+            else:
+                await message.reply("❌ Invalid time unit. Use: sec/min/hour/day")
                 return
-        
-        delete_after = seconds
-    else:
-        # No time specified
-        pass
+                
+            if delete_after <= 0:
+                await message.reply("❌ Time must be greater than 0")
+                return
+                
+        except (ValueError, AttributeError):
+            await message.reply("❌ Invalid time format. Example: /post 1hour or /post 30min")
+            return
 
     post_content = message.reply_to_message
     channels = await db.get_all_channels()
@@ -191,98 +135,122 @@ async def send_post(client, message: Message):
         await message.reply("**No channels connected yet.**")
         return
 
+    # Generate a unique post ID (using timestamp)
     post_id = int(time.time())
     sent_messages = []
 
     for channel in channels:
         try:
+            # Copy the message to the channel
             sent_message = await client.copy_message(
-                chat_id=channel["_id"],
-                from_chat_id=message.chat.id,
-                message_id=post_content.id
+                chat_id=channel["_id"],  # Channel ID
+                from_chat_id=message.chat.id,  # User's chat ID
+                message_id=post_content.id  # ID of the replied message
             )
+
+            # Save the sent message details
             sent_messages.append({"channel_id": channel["_id"], "message_id": sent_message.id})
+            
+            # Schedule deletion if time was specified
+            if delete_after:
+                await schedule_deletion(client, channel["_id"], sent_message.id, delete_after, message.from_user.id, post_id)
+                
         except Exception as e:
             print(f"Error posting to channel {channel['_id']}: {e}")
             await message.reply(f"❌ Failed to post to channel {channel['_id']}. Error: {e}")
 
-    post_data = {
-        "post_id": post_id,
-        "messages": sent_messages,
-        "delete_after": delete_after,
-        "owner_id": message.from_user.id
-    }
-    await db.save_post(post_id, post_data)
+    # Save the post with its unique ID
+    await db.save_post(post_id, sent_messages)
 
-    if delete_after:
-        asyncio.create_task(delete_post_after_delay(client, post_id, delete_after, message.from_user.id))
-        # Format time display
-        if time_unit.startswith("hour"):
-            time_display = f"{delete_after//3600} hour{'s' if delete_after//3600 > 1 else ''}"
-        elif time_unit.startswith("minute"):
-            time_display = f"{delete_after//60} minute{'s' if delete_after//60 > 1 else ''}"
-        elif time_unit.startswith("day"):
-            time_display = f"{delete_after//86400} day{'s' if delete_after//86400 > 1 else ''}"
-        else:
-            time_display = f"{delete_after} second{'s' if delete_after > 1 else ''}"
-        
-        deletion_note = f"\n• This post will auto-delete after {time_display} ⏳"
-    else:
-        deletion_note = ""
-
-    await message.reply(
+    # Reply with post status and user ID
+    response = (
         f"**• Post sent to all channels! ✅\n"
-        f"• Post ID: `{post_id}` ✍🏻"
-        f"{deletion_note}**"
+        f"• Post ID: `{post_id}` ✍🏻\n"
     )
+    
+    if delete_after:
+        # Convert seconds to human-readable time
+        time_str = format_time(delete_after)
+        response += f"• Will auto-delete after: {time_str} ⏳\n"
+    
+    await message.reply(response)
+
+async def schedule_deletion(client, channel_id, message_id, delay_seconds, user_id, post_id):
+    """Schedule a message for deletion after a delay"""
+    await asyncio.sleep(delay_seconds)
+    
+    try:
+        await client.delete_messages(
+            chat_id=channel_id,
+            message_ids=message_id
+        )
+        
+        # Send confirmation to admin
+        time_str = format_time(delay_seconds)
+        await client.send_message(
+            user_id,
+            f"✅ Auto-deleted post `{post_id}` from channel `{channel_id}` after {time_str}"
+        )
+        
+    except Exception as e:
+        print(f"Error in auto-deletion: {e}")
+        try:
+            await client.send_message(
+                user_id,
+                f"❌ Failed to auto-delete post `{post_id}` from channel `{channel_id}`. Error: {e}"
+            )
+        except:
+            pass
+
+def format_time(seconds):
+    """Convert seconds to human-readable time"""
+    if seconds < 60:
+        return f"{seconds} seconds"
+    elif seconds < 3600:
+        return f"{seconds//60} minutes"
+    elif seconds < 86400:
+        return f"{seconds//3600} hours"
+    else:
+        return f"{seconds//86400} days"
 
 @Client.on_message(filters.command("del_post") & filters.private & filters.user(ADMIN))
 async def delete_post(client, message: Message):
+
+    # Check if the user provided a post ID
     if len(message.command) < 2:
         await message.reply("**Usage: /del_post <post_id>**")
         return
 
+    # Extract the post ID
     post_id = message.command[1]
 
     try:
-        post_id = int(post_id)
+        post_id = int(post_id)  # Convert to integer
     except ValueError:
         await message.reply("❌ Invalid post ID. Please provide a valid integer.")
         return
 
+    # Retrieve the post's details from the database
     post = await db.get_post(post_id)
 
     if not post:
         await message.reply(f"❌ No post found with ID `{post_id}`.")
         return
 
-    deleted_channels = []
-    failed_channels = []
-
-    for msg in post['messages']:
+    # Delete the messages from all channels
+    for msg in post:
         try:
             await client.delete_messages(
-                chat_id=msg["channel_id"],
-                message_ids=msg["message_id"]
+                chat_id=msg["channel_id"],  # Channel ID
+                message_ids=msg["message_id"]  # Message ID
             )
-            channel = await db.get_channel(msg["channel_id"])
-            if channel:
-                deleted_channels.append(channel['name'])
         except Exception as e:
             print(f"Error deleting message from channel {msg['channel_id']}: {e}")
-            channel = await db.get_channel(msg["channel_id"])
-            if channel:
-                failed_channels.append(channel['name'])
+            await message.reply(f"❌ Failed to delete message from channel {msg['channel_id']}. Error: {e}")
 
+    # Delete the post from the database
     await db.delete_post(post_id)
-    
-    response = f"**✅ Post `{post_id}` deletion results:**\n"
-    if deleted_channels:
-        response += f"\n✔️ Deleted from:\n- " + "\n- ".join(deleted_channels)
-    if failed_channels:
-        response += f"\n\n❌ Failed to delete from:\n- " + "\n- ".join(failed_channels)
-    
-    await message.reply(response)
+    await message.reply(f"**✅ Post `{post_id}` deleted from all channels!**")
 
 # ========================================= CALLBACKS =============================================
 # Callback Query Handler
