@@ -93,6 +93,7 @@ async def list_channels(client, message: Message):
 
     await message.reply(response)
 
+
 @Client.on_message(filters.command("post") & filters.private & filters.user(ADMIN))
 async def send_post(client, message: Message):
     # Check if the user is replying to a message
@@ -100,34 +101,18 @@ async def send_post(client, message: Message):
         await message.reply("**Reply to a message to post it.**")
         return
 
-    # Parse time delay if provided (format: /post 1hour, /post 30min, etc.)
+    # Parse time delay if provided
     delete_after = None
+    time_input = None
     if len(message.command) > 1:
-        time_input = message.command[1].lower()
         try:
-            # Extract number and unit
-            num = int(''.join(filter(str.isdigit, time_input)))
-            unit = ''.join(filter(str.isalpha, time_input))
-            
-            # Convert to seconds
-            if 'sec' in unit:
-                delete_after = num
-            elif 'min' in unit:
-                delete_after = num * 60
-            elif 'hour' in unit:
-                delete_after = num * 3600
-            elif 'day' in unit:
-                delete_after = num * 86400
-            else:
-                await message.reply("❌ Invalid time unit. Use: sec/min/hour/day")
-                return
-                
+            time_input = ' '.join(message.command[1:]).lower()
+            delete_after = parse_time(time_input)
             if delete_after <= 0:
                 await message.reply("❌ Time must be greater than 0")
                 return
-                
-        except (ValueError, AttributeError):
-            await message.reply("❌ Invalid time format. Example: /post 1hour or /post 30min")
+        except ValueError as e:
+            await message.reply(f"❌ {str(e)}\nExample: /post 1h 30min or /post 2 hours 15 minutes")
             return
 
     post_content = message.reply_to_message
@@ -140,46 +125,87 @@ async def send_post(client, message: Message):
     # Generate a unique post ID (using timestamp)
     post_id = int(time.time())
     sent_messages = []
+    success_count = 0
+    total_channels = len(channels)
+
+    # Send initial processing message
+    processing_msg = await message.reply(f"📤 Posting to {total_channels} channels...")
 
     for channel in channels:
         try:
             # Copy the message to the channel
             sent_message = await client.copy_message(
-                chat_id=channel["_id"],  # Channel ID
-                from_chat_id=message.chat.id,  # User's chat ID
-                message_id=post_content.id  # ID of the replied message
+                chat_id=channel["_id"],
+                from_chat_id=message.chat.id,
+                message_id=post_content.id
             )
 
-            # Save the sent message details
-            sent_messages.append({"channel_id": channel["_id"], "message_id": sent_message.id})
-            
+            sent_messages.append({
+                "channel_id": channel["_id"],
+                "message_id": sent_message.id,
+                "channel_name": channel.get("name", str(channel["_id"]))
+            })
+            success_count += 1
+
             # Schedule deletion if time was specified
             if delete_after:
-                await schedule_deletion(client, channel["_id"], sent_message.id, delete_after, message.from_user.id, post_id)
+                asyncio.create_task(
+                    schedule_deletion(
+                        client,
+                        channel["_id"],
+                        sent_message.id,
+                        delete_after,
+                        message.from_user.id,
+                        post_id,
+                        channel.get("name", str(channel["_id"]))
+                    )
+                )
                 
         except Exception as e:
             print(f"Error posting to channel {channel['_id']}: {e}")
-            await message.reply(f"❌ Failed to post to channel {channel['_id']}. Error: {e}")
 
     # Save the post with its unique ID
-    await db.save_post(post_id, sent_messages)
+    if sent_messages:
+        await db.save_post(post_id, sent_messages)
 
-    # Reply with post status and user ID
-    response = (
-        f"**• Post sent to all channels! ✅\n"
-        f"• Post ID: `{post_id}` ✍🏻\n"
+    # Prepare the result message
+    result_msg = (
+        f"📣 <b>Posting Completed!</b>\n\n"
+        f"• <b>Post ID:</b> <code>{post_id}</code>\n"
+        f"• <b>Success:</b> {success_count}/{total_channels} channels\n"
     )
-    
-    if delete_after:
-        # Convert seconds to human-readable time
-        time_str = format_time(delete_after)
-        response += f"• Will auto-delete after: {time_str} ⏳\n"
-    
-    await message.reply(response)
 
-async def schedule_deletion(client, channel_id, message_id, delay_seconds, user_id, post_id):
+    if delete_after:
+        deletion_time = (datetime.now() + timedelta(seconds=delete_after)).strftime('%Y-%m-%d %H:%M:%S')
+        time_str = format_time(delete_after)
+        result_msg += (
+            f"\n⏳ <b>Auto-delete scheduled:</b>\n"
+            f"• <b>After:</b> {time_str}\n"
+            f"• <b>At:</b> {deletion_time}\n"
+        )
+
+    # Add failed channels if any
+    if success_count < total_channels:
+        result_msg += f"\n❌ <b>Failed:</b> {total_channels - success_count} channels"
+
+    # Edit the processing message with final result
+    await processing_msg.edit_text(result_msg)
+
+    # Send additional copy of the post ID for easy reference
+    if sent_messages:
+        await message.reply(
+            f"📋 <b>Post Summary</b>\n"
+            f"• <b>ID:</b> <code>{post_id}</code>\n"
+            f"• <b>Preview:</b>",
+            reply_to_message_id=post_content.id
+        )
+
+async def schedule_deletion(client, channel_id, message_id, delay_seconds, user_id, post_id, channel_name):
     """Schedule a message for deletion after a delay"""
     await asyncio.sleep(delay_seconds)
+    
+    deletion_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    time_str = format_time(delay_seconds)
     
     try:
         await client.delete_messages(
@@ -187,33 +213,103 @@ async def schedule_deletion(client, channel_id, message_id, delay_seconds, user_
             message_ids=message_id
         )
         
-        # Send confirmation to admin
-        time_str = format_time(delay_seconds)
-        await client.send_message(
-            user_id,
-            f"✅ Auto-deleted post `{post_id}` from channel `{channel_id}` after {time_str}"
+        # Send deletion confirmation
+        confirmation_msg = (
+            f"🗑 <b>Post Auto-Deleted</b>\n\n"
+            f"• <b>Post ID:</b> <code>{post_id}</code>\n"
+            f"• <b>Channel:</b> {channel_name}\n"
+            f"• <b>Deleted at:</b> {deletion_time}\n"
+            f"• <b>Duration:</b> {time_str}"
         )
+        await client.send_message(user_id, confirmation_msg)
         
     except Exception as e:
-        print(f"Error in auto-deletion: {e}")
+        error_msg = (
+            f"❌ <b>Failed to Auto-Delete</b>\n\n"
+            f"• <b>Post ID:</b> <code>{post_id}</code>\n"
+            f"• <b>Channel:</b> {channel_name}\n"
+            f"• <b>Error:</b> {str(e)}"
+        )
         try:
-            await client.send_message(
-                user_id,
-                f"❌ Failed to auto-delete post `{post_id}` from channel `{channel_id}`. Error: {e}"
-            )
+            await client.send_message(user_id, error_msg)
         except:
             pass
 
+def parse_time(time_str):
+    """
+    Parse human-readable time string into seconds
+    Supports formats like: 1h30m, 2 hours 15 mins, 1day, 30sec, etc.
+    """
+    time_units = {
+        's': 1,
+        'sec': 1,
+        'second': 1,
+        'seconds': 1,
+        'm': 60,
+        'min': 60,
+        'mins': 60,
+        'minute': 60,
+        'minutes': 60,
+        'h': 3600,
+        'hour': 3600,
+        'hours': 3600,
+        'd': 86400,
+        'day': 86400,
+        'days': 86400
+    }
+
+    total_seconds = 0
+    current_num = ''
+    
+    for char in time_str:
+        if char.isdigit():
+            current_num += char
+        else:
+            if current_num:
+                # Find matching unit
+                num = int(current_num)
+                unit = char.lower()
+                remaining_str = time_str[time_str.index(char):].lower()
+                
+                # Check for multi-character units
+                matched = False
+                for unit_str, multiplier in sorted(time_units.items(), key=lambda x: -len(x[0])):
+                    if remaining_str.startswith(unit_str):
+                        total_seconds += num * multiplier
+                        current_num = ''
+                        matched = True
+                        break
+                
+                if not matched:
+                    raise ValueError(f"Invalid time unit: {char}")
+            current_num = ''
+    
+    if current_num:  # If only number was provided (like "60")
+        total_seconds += int(current_num)  # Default to seconds
+    
+    if total_seconds == 0:
+        raise ValueError("No valid time duration found")
+    
+    return total_seconds
+
 def format_time(seconds):
     """Convert seconds to human-readable time"""
-    if seconds < 60:
-        return f"{seconds} seconds"
-    elif seconds < 3600:
-        return f"{seconds//60} minutes"
-    elif seconds < 86400:
-        return f"{seconds//3600} hours"
-    else:
-        return f"{seconds//86400} days"
+    periods = [
+        ('day', 86400),
+        ('hour', 3600),
+        ('minute', 60),
+        ('second', 1)
+    ]
+    
+    result = []
+    for period_name, period_seconds in periods:
+        if seconds >= period_seconds:
+            period_value, seconds = divmod(seconds, period_seconds)
+            if period_value > 0:
+                result.append(f"{period_value} {period_name}{'s' if period_value != 1 else ''}")
+    
+    return ' '.join(result) if result else "0 seconds"
+
 
 @Client.on_message(filters.command("del_post") & filters.private & filters.user(ADMIN))
 async def delete_post(client, message: Message):
