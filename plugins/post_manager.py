@@ -93,7 +93,6 @@ async def list_channels(client, message: Message):
 
     await message.reply(response)
     
-
 @Client.on_message(filters.command("post") & filters.private & filters.user(ADMIN))
 async def send_post(client, message: Message):
     # Check if the user is replying to a message
@@ -185,49 +184,14 @@ async def send_post(client, message: Message):
     if success_count < total_channels:
         result_msg += f"• <b>Failed:</b> {total_channels - success_count} channels\n"
 
-    # Edit the processing message with final result
-    await processing_msg.edit_text(result_msg)
+    # Create inline keyboard with delete button
+    reply_markup = InlineKeyboardMarkup([
+        [InlineKeyboardButton("🗑 Delete This Post", callback_data=f"delete_{post_id}")]
+    ])
 
-async def schedule_deletion(client, channel_id, message_id, delay_seconds, user_id, post_id, channel_name, confirmation_msg_id):
-    """Schedule a message for deletion after a delay"""
-    await asyncio.sleep(delay_seconds)
+    # Edit the processing message with final result and delete button
+    await processing_msg.edit_text(result_msg, reply_markup=reply_markup)
     
-    try:
-        # First delete the original post from channel
-        await client.delete_messages(
-            chat_id=channel_id,
-            message_ids=message_id
-        )
-        
-        # Then delete the initial confirmation message
-        try:
-            await client.delete_messages(
-                chat_id=user_id,
-                message_ids=confirmation_msg_id
-            )
-        except Exception as e:
-            print(f"Couldn't delete confirmation message: {e}")
-
-        # Send new deletion confirmation
-        confirmation_msg = (
-            f"🗑 <b>Post Auto-Deleted</b>\n\n"
-            f"• <b>Post ID:</b> <code>{post_id}</code>\n"
-            f"• <b>Duration:</b> {format_time(delay_seconds)}"
-        )
-        await client.send_message(user_id, confirmation_msg)
-        
-    except Exception as e:
-        error_msg = (
-            f"❌ <b>Failed to Auto-Delete</b>\n\n"
-            f"• <b>Post ID:</b> <code>{post_id}</code>\n"
-            f"• <b>Channel:</b> {channel_name}\n"
-            f"• <b>Error:</b> {str(e)}"
-        )
-        try:
-            await client.send_message(user_id, error_msg)
-        except:
-            pass
-
 def parse_time(time_str):
     """
     Parse human-readable time string into seconds
@@ -345,11 +309,44 @@ async def delete_post(client, message: Message):
 
 # ========================================= CALLBACKS =============================================
 # Callback Query Handler
+
 @Client.on_callback_query()
 async def cb_handler(client: Client, query: CallbackQuery):
     data = query.data
 
-    if data == "start":
+    if data.startswith("delete_"):
+        # Extract post ID from callback data
+        post_id = int(data.split("_")[1])
+        
+        # Retrieve the post's details from the database
+        post = await db.get_post(post_id)
+
+        if not post:
+            await query.answer("❌ Post not found or already deleted", show_alert=True)
+            return
+
+        # Delete the messages from all channels
+        for msg in post:
+            try:
+                await client.delete_messages(
+                    chat_id=msg["channel_id"],  # Channel ID
+                    message_ids=msg["message_id"]  # Message ID
+                )
+            except Exception as e:
+                print(f"Error deleting message from channel {msg['channel_id']}: {e}")
+
+        # Delete the post from the database
+        await db.delete_post(post_id)
+        
+        # Edit the original message to show deletion confirmation
+        await query.message.edit_text(
+            f"🗑 <b>Post Deleted Successfully!</b>\n\n"
+            f"• <b>Post ID:</b> <code>{post_id}</code>\n"
+            f"• <b>Deleted from:</b> {len(post)} channels"
+        )
+        return
+    
+    elif data == "start":
         txt = (
             f"> **✨👋🏻 Hey {query.from_user.mention} !!**\n"
             f"**Welcome to the Channel Manager Bot, Manage multiple channels and post messages with ease! 😌**\n\n"
@@ -410,7 +407,7 @@ ABOUT_TXT = """
 ├➢ ʙᴜɪʟᴅ ꜱᴛᴀᴛᴜꜱ  : ᴘʏᴛʜᴏɴ v3.6.8
 ╰───────────────⍟
 
-➢ ɴᴏᴛᴇ :- ʀᴇᴘᴏ ɪꜱ ᴘᴀɪᴅ, ᴅᴏɴ'ᴛ ᴅᴍ ꜰᴏʀ ᴛɪᴍᴇᴘᴀꜱꜱ 🙏🏻
+➢ ɴᴏᴛᴇ :- This Repo is paid, interested Owners can DM. 🤝🏻
 </b>"""
 
 HELP_TXT = """
