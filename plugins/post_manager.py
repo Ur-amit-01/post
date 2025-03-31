@@ -74,6 +74,10 @@ async def remove_current_channel(client, message: Message):
 # Command to list all connected channels
 @Client.on_message(filters.command("channels") & filters.private & filters.user(ADMIN))
 async def list_channels(client, message: Message):
+    try:
+        await message.react(emoji=random.choice(REACTIONS), big=True)  # React with a random emoji
+    except:
+        pass
 
     # Retrieve all channels from the database
     channels = await db.get_all_channels()
@@ -95,6 +99,10 @@ async def list_channels(client, message: Message):
     
 @Client.on_message(filters.command("post") & filters.private & filters.user(ADMIN))
 async def send_post(client, message: Message):
+    try:
+        await message.react(emoji=random.choice(REACTIONS), big=True)  # React with a random emoji
+    except:
+        pass
     # Check if the user is replying to a message
     if not message.reply_to_message:
         await message.reply("**Reply to a message to post it.**")
