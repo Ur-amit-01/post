@@ -199,7 +199,49 @@ async def send_post(client, message: Message):
 
     # Edit the processing message with final result and delete button
     await processing_msg.edit_text(result_msg, reply_markup=reply_markup)
+
+
+async def schedule_deletion(client, channel_id, message_id, delay_seconds, user_id, post_id, channel_name, confirmation_msg_id):
+    """Schedule a message for deletion after a delay"""
+    await asyncio.sleep(delay_seconds)
     
+    try:
+        # First delete the original post from channel
+        await client.delete_messages(
+            chat_id=channel_id,
+            message_ids=message_id
+        )
+        
+        # Then delete the initial confirmation message
+        try:
+            await client.delete_messages(
+                chat_id=user_id,
+                message_ids=confirmation_msg_id
+            )
+        except Exception as e:
+            print(f"Couldn't delete confirmation message: {e}")
+
+        # Send new deletion confirmation
+        confirmation_msg = (
+            f"🗑 <b>Post Auto-Deleted</b>\n\n"
+            f"• <b>Post ID:</b> <code>{post_id}</code>\n"
+            f"• <b>Duration:</b> {format_time(delay_seconds)}"
+        )
+        await client.send_message(user_id, confirmation_msg)
+        
+    except Exception as e:
+        error_msg = (
+            f"❌ <b>Failed to Auto-Delete</b>\n\n"
+            f"• <b>Post ID:</b> <code>{post_id}</code>\n"
+            f"• <b>Channel:</b> {channel_name}\n"
+            f"• <b>Error:</b> {str(e)}"
+        )
+        try:
+            await client.send_message(user_id, error_msg)
+        except:
+            pass
+
+
 def parse_time(time_str):
     """
     Parse human-readable time string into seconds
