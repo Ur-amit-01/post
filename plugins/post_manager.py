@@ -92,7 +92,7 @@ async def list_channels(client, message: Message):
     )
 
     await message.reply(response)
-
+    
 
 @Client.on_message(filters.command("post") & filters.private & filters.user(ADMIN))
 async def send_post(client, message: Message):
@@ -128,8 +128,11 @@ async def send_post(client, message: Message):
     success_count = 0
     total_channels = len(channels)
 
-    # Send initial processing message
-    processing_msg = await message.reply(f"📤 Posting to {total_channels} channels...", reply_to_message_id=post_content.id)
+    # Send initial processing message (now as reply to original content)
+    processing_msg = await message.reply(
+        f"**📢 Posting to {total_channels} channels...**",
+        reply_to_message_id=post_content.id
+    )
 
     for channel in channels:
         try:
@@ -157,7 +160,8 @@ async def send_post(client, message: Message):
                         delete_after,
                         message.from_user.id,
                         post_id,
-                        channel.get("name", str(channel["_id"]))
+                        channel.get("name", str(channel["_id"])),
+                        processing_msg.id  # Pass confirmation message ID to delete later
                     )
                 )
                 
@@ -168,49 +172,47 @@ async def send_post(client, message: Message):
     if sent_messages:
         await db.save_post(post_id, sent_messages)
 
-    # Prepare the result message
+    # Prepare the result message (replaces processing message)
     result_msg = (
         f"📣 <b>Posting Completed!</b>\n\n"
         f"• <b>Post ID:</b> <code>{post_id}</code>\n"
         f"• <b>Success:</b> {success_count}/{total_channels} channels\n"
     )
-
     if delete_after:
-        deletion_time = (datetime.now() + timedelta(seconds=delete_after)).strftime('%Y-%m-%d %H:%M:%S')
         time_str = format_time(delete_after)
-        result_msg += (
-            f"\n⏳ <b>Auto-delete scheduled:</b>\n"
-            f"• <b>After:</b> {time_str}\n"
-            f"• <b>At:</b> {deletion_time}\n"
-        )
+        result_msg += f"• <b>Auto-delete in:</b> {time_str}\n"
 
-    # Add failed channels if any
     if success_count < total_channels:
-        result_msg += f"\n❌ <b>Failed:</b> {total_channels - success_count} channels"
+        result_msg += f"• <b>Failed:</b> {total_channels - success_count} channels\n"
 
     # Edit the processing message with final result
     await processing_msg.edit_text(result_msg)
 
-async def schedule_deletion(client, channel_id, message_id, delay_seconds, user_id, post_id, channel_name):
+async def schedule_deletion(client, channel_id, message_id, delay_seconds, user_id, post_id, channel_name, confirmation_msg_id):
     """Schedule a message for deletion after a delay"""
     await asyncio.sleep(delay_seconds)
     
-    deletion_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    time_str = format_time(delay_seconds)
-    
     try:
+        # First delete the original post from channel
         await client.delete_messages(
             chat_id=channel_id,
             message_ids=message_id
         )
         
-        # Send deletion confirmation
+        # Then delete the initial confirmation message
+        try:
+            await client.delete_messages(
+                chat_id=user_id,
+                message_ids=confirmation_msg_id
+            )
+        except Exception as e:
+            print(f"Couldn't delete confirmation message: {e}")
+
+        # Send new deletion confirmation
         confirmation_msg = (
             f"🗑 <b>Post Auto-Deleted</b>\n\n"
             f"• <b>Post ID:</b> <code>{post_id}</code>\n"
-            f"• <b>Channel:</b> {channel_name}\n"
-            f"• <b>Deleted at:</b> {deletion_time}\n"
-            f"• <b>Duration:</b> {time_str}"
+            f"• <b>Duration:</b> {format_time(delay_seconds)}"
         )
         await client.send_message(user_id, confirmation_msg)
         
