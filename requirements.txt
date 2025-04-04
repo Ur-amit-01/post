@@ -13,4 +13,3 @@ pytz
 pyromod
 fuzzywuzzy
 python-Levenshtein
-logging
