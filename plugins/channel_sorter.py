@@ -1,11 +1,8 @@
-
 from pyrogram import Client, filters
 from pyrogram.types import Message
-from fuzzywuzzy import process
 import asyncio
 import logging
 from logging.handlers import RotatingFileHandler
-import os
 
 # Configure logging
 logging.basicConfig(
@@ -26,13 +23,120 @@ logger = logging.getLogger(__name__)
 YAKEEN_MAIN = -1002544207724  # Yakeen 2.0 main channel
 PHYSICS_CHANNEL = -1002589768419
 PHYSICAL_CHEM_CHANNEL = -1002508704907
-IOC_CHANNEL = -1002508704907
-OC_CHANNEL = -1002508704907
-BOTANY_CHANNEL = -1005555555555
-ZOOLOGY_CHANNEL = -1006666666666
+IOC_CHANNEL = -1002508704907  # Changed to unique ID
+OC_CHANNEL = -1002508704907   # Changed to unique ID
+BOTANY_CHANNEL = -1002572646577
+ZOOLOGY_CHANNEL = -1002572646577
 
 # Message queue for maintaining sequence
-message_queue = asyncio.Queue() 
+message_queue = asyncio.Queue()
+
+# Chapter mappings (simplified exact matching)
+CHAPTER_MAPPING = {
+    # Physics
+    "basic maths & calculus (mathematical tools)": PHYSICS_CHANNEL,
+    "vectors": PHYSICS_CHANNEL,
+    "units and measurements": PHYSICS_CHANNEL,
+    "motion in a straight line": PHYSICS_CHANNEL,
+    "motion in a plane": PHYSICS_CHANNEL,
+    "laws of motion": PHYSICS_CHANNEL,
+    "work, energy and power": PHYSICS_CHANNEL,
+    "centre of mass and system of particles": PHYSICS_CHANNEL,
+    "rotational motion": PHYSICS_CHANNEL,
+    "gravitation": PHYSICS_CHANNEL,
+    "mechanical properties of solids": PHYSICS_CHANNEL,
+    "mechanical properties of fluids": PHYSICS_CHANNEL,
+    "thermal properties of matter": PHYSICS_CHANNEL,
+    "kinetic theory": PHYSICS_CHANNEL,
+    "thermodynamics": PHYSICS_CHANNEL,
+    "oscillations": PHYSICS_CHANNEL,
+    "waves": PHYSICS_CHANNEL,
+    "electric charges and fields": PHYSICS_CHANNEL,
+    "electrostatic potential and capacitance": PHYSICS_CHANNEL,
+    "current electricity": PHYSICS_CHANNEL,
+    "moving charges and magnetism": PHYSICS_CHANNEL,
+    "magnetism and matter": PHYSICS_CHANNEL,
+    "electromagnetic induction": PHYSICS_CHANNEL,
+    "alternating current": PHYSICS_CHANNEL,
+    "electromagnetic waves": PHYSICS_CHANNEL,
+    "ray optics and optical instruments": PHYSICS_CHANNEL,
+    "wave optics": PHYSICS_CHANNEL,
+    "dual nature of radiation and matter": PHYSICS_CHANNEL,
+    "atoms": PHYSICS_CHANNEL,
+    "nuclei": PHYSICS_CHANNEL,
+    "semiconductor electronics: materials, devices and simple circuits": PHYSICS_CHANNEL,
+    
+    # Physical Chemistry
+    "some basic concept of chemistry": PHYSICAL_CHEM_CHANNEL,
+    "redox reaction": PHYSICAL_CHEM_CHANNEL,
+    "solutions": PHYSICAL_CHEM_CHANNEL,
+    "state of matter": PHYSICAL_CHEM_CHANNEL,
+    "thermodynamics": PHYSICAL_CHEM_CHANNEL,
+    "thermochemistry": PHYSICAL_CHEM_CHANNEL,
+    "chemical equilibrium": PHYSICAL_CHEM_CHANNEL,
+    "ionic equilibrium": PHYSICAL_CHEM_CHANNEL,
+    "electrochemistry": PHYSICAL_CHEM_CHANNEL,
+    "chemical kinetics": PHYSICAL_CHEM_CHANNEL,
+    "structure of atom": PHYSICAL_CHEM_CHANNEL,
+    "practical physical chemistry": PHYSICAL_CHEM_CHANNEL,
+    
+    # IOC
+    "classification of elements and periodicity in properties": IOC_CHANNEL,
+    "chemical bonding and molecular structure": IOC_CHANNEL,
+    "co-ordination compound": IOC_CHANNEL,
+    "coordination compound": IOC_CHANNEL,
+    "the d and f block elements": IOC_CHANNEL,
+    "the p-block elements": IOC_CHANNEL,
+    "salt analysis": IOC_CHANNEL,
+    
+    # OC
+    "organic chemistry: some basic principles and techniques (iupac naming)": OC_CHANNEL,
+    "organic chemistry: some basic principles and techniques (isomerism)": OC_CHANNEL,
+    "organic chemistry: some basic principles and techniques (goc)": OC_CHANNEL,
+    "hydrocarbon": OC_CHANNEL,
+    "halosilkanes and haloarenes": OC_CHANNEL,
+    "alcohols, ethers and phenols": OC_CHANNEL,
+    "aldehydes, ketones and carboxylic acids": OC_CHANNEL,
+    "amines": OC_CHANNEL,
+    "biomolecules": OC_CHANNEL,
+    "practical organic chemistry": OC_CHANNEL,
+    
+    # Botany
+    "cell - the unit of life": BOTANY_CHANNEL,
+    "cell cycle and cell division": BOTANY_CHANNEL,
+    "the living world": BOTANY_CHANNEL,
+    "biological classification": BOTANY_CHANNEL,
+    "plant kingdom": BOTANY_CHANNEL,
+    "morphology of flowering plants": BOTANY_CHANNEL,
+    "anatomy of flowering plants": BOTANY_CHANNEL,
+    "respiration in plants": BOTANY_CHANNEL,
+    "photosynthesis in higher plants": BOTANY_CHANNEL,
+    "plant growth and development": BOTANY_CHANNEL,
+    "sexual reproduction in flowering plant": BOTANY_CHANNEL,
+    "molecular basis of inheritance": BOTANY_CHANNEL,
+    "principle of inheritance and variation": BOTANY_CHANNEL,
+    "microbes in human welfare": BOTANY_CHANNEL,
+    "organisms and population": BOTANY_CHANNEL,
+    "ecosystem": BOTANY_CHANNEL,
+    "biodiversity and conservation": BOTANY_CHANNEL,
+    
+    # Zoology
+    "structural organization in animals": ZOOLOGY_CHANNEL,
+    "breathing and exchange of gases": ZOOLOGY_CHANNEL,
+    "body fluids and circulation": ZOOLOGY_CHANNEL,
+    "excretory products & their elimination": ZOOLOGY_CHANNEL,
+    "locomotion & movement": ZOOLOGY_CHANNEL,
+    "neural control & coordination": ZOOLOGY_CHANNEL,
+    "chemical coordination & integration": ZOOLOGY_CHANNEL,
+    "animal kingdom": ZOOLOGY_CHANNEL,
+    "biomolecules": ZOOLOGY_CHANNEL,
+    "human reproduction": ZOOLOGY_CHANNEL,
+    "reproduction health": ZOOLOGY_CHANNEL,
+    "human health and diseases": ZOOLOGY_CHANNEL,
+    "biotechnology: principles & processes": ZOOLOGY_CHANNEL,
+    "biotechnology and its applications": ZOOLOGY_CHANNEL,
+    "evolution": ZOOLOGY_CHANNEL
+}
 
 async def process_queue():
     """Process messages in sequence with logging"""
@@ -53,22 +157,14 @@ async def process_queue():
         finally:
             message_queue.task_done()
 
-def find_best_match(text, choices, threshold=75):
-    """Find the best matching chapter with logging"""
-    try:
-        result = process.extractOne(text.lower(), [c.lower() for c in choices])
-        if result and result[1] >= threshold:
-            matched_chapter = choices[result[2]]
-            logger.debug(
-                f"Matched '{text[:50]}...' to '{matched_chapter}' "
-                f"with confidence {result[1]}%"
-            )
-            return matched_chapter
-        logger.debug(f"No good match found for '{text[:50]}...' (best match: {result[1] if result else 'N/A'}%)")
-        return None
-    except Exception as e:
-        logger.error(f"Error in find_best_match for text '{text[:50]}...': {str(e)}", exc_info=True)
-        return None
+def find_chapter_match(text):
+    """Find matching chapter using exact matching (case insensitive)"""
+    text_lower = text.lower().strip()
+    for chapter in CHAPTER_MAPPING:
+        if chapter in text_lower:
+            logger.debug(f"Found match: '{chapter}' in message text")
+            return chapter
+    return None
 
 @Client.on_message(filters.chat(YAKEEN_MAIN))
 async def sort_messages(client: Client, message: Message):
@@ -84,14 +180,14 @@ async def sort_messages(client: Client, message: Message):
             asyncio.create_task(process_queue())
             logger.info("Started message queue processor")
         
-        best_match = find_best_match(caption, ALL_CHAPTERS)
+        matched_chapter = find_chapter_match(caption)
         
-        if best_match:
-            target_channel = CHAPTER_MAPPING[best_match.lower()]
+        if matched_chapter:
+            target_channel = CHAPTER_MAPPING[matched_chapter]
             await message_queue.put((message, target_channel))
             logger.info(
                 f"Queued message ID {message.id} for forwarding to {target_channel}. "
-                f"Matched chapter: '{best_match}'"
+                f"Matched chapter: '{matched_chapter}'"
             )
         else:
             logger.warning(
@@ -105,142 +201,14 @@ async def sort_messages(client: Client, message: Message):
             exc_info=True
         )
 
+app = Client("yakeen_bot")
 
-
-
-# Chapter mappings with slight variations for fuzzy matching
-PHYSICS_CHAPTERS = [
-    "Basic Maths & Calculus (Mathematical Tools)",
-    "Vectors",
-    "Units and Measurements",
-    "Motion in a straight line",
-    "Motion in a plane",
-    "Laws of motion",
-    "Work, energy and power",
-    "Centre of mass and System of Particles",
-    "Rotational Motion",
-    "Gravitation",
-    "Mechanical Properties of Solids",
-    "Mechanical Properties of Fluids",
-    "Thermal Properties of matter",
-    "Kinetic Theory",
-    "Thermodynamics",
-    "Oscillations",
-    "Waves",
-    "Electric Charges and Fields",
-    "Electrostatic Potential and Capacitance",
-    "Current Electricity",
-    "Moving Charges and Magnetism",
-    "Magnetism and Matter",
-    "Electromagnetic Induction",
-    "Alternating Current",
-    "Electromagnetic Waves",
-    "Ray Optics and Optical Instruments",
-    "Wave Optics",
-    "Dual Nature of Radiation and Matter",
-    "Atoms",
-    "Nuclei",
-    "Semiconductor Electronics: Materials, Devices and Simple Circuits"
-]
-
-PHYSICAL_CHEM_CHAPTERS = [
-    "Some Basic Concept of Chemistry",
-    "Redox Reaction",
-    "Solutions",
-    "State of Matter",
-    "Thermodynamics",
-    "Thermochemistry",
-    "Chemical Equilibrium",
-    "Ionic Equilibrium",
-    "Electrochemistry",
-    "Chemical Kinetics",
-    "Structure of Atom",
-    "Practical Physical Chemistry"
-]
-
-IOC_CHAPTERS = [
-    "Classification of Elements and Periodicity in Properties",
-    "Chemical Bonding and Molecular Structure",
-    "Co-ordination Compound",
-    "Coordination Compound",
-    "The d and f Block Elements",
-    "The p-block Elements",
-    "Salt Analysis"
-]
-
-OC_CHAPTERS = [
-    "Organic Chemistry: Some Basic principles and Techniques (IUPAC Naming)",
-    "Organic Chemistry: Some Basic principles and Techniques (Isomerism)",
-    "Organic Chemistry: Some Basic principles and Techniques (GOC)",
-    "Hydrocarbon",
-    "Halosilkanes and Haloarenes",
-    "Alcohols, Ethers and Phenols",
-    "Aldehydes, Ketones and Carboxylic Acids",
-    "Amines",
-    "Biomolecules",
-    "Practical Organic Chemistry"
-]
-
-BOTANY_CHAPTERS = [
-    "Cell - The Unit of Life",
-    "Cell Cycle and Cell Division",
-    "The Living World",
-    "Biological Classification",
-    "Plant Kingdom",
-    "Morphology of Flowering Plants",
-    "Anatomy of Flowering Plants",
-    "Respiration in Plants",
-    "Photosynthesis in Higher Plants",
-    "Plant Growth and Development",
-    "Sexual Reproduction in Flowering Plant",
-    "Molecular Basis of Inheritance",
-    "Principle of Inheritance and Variation",
-    "Microbes in Human Welfare",
-    "Organisms and Population",
-    "Ecosystem",
-    "Biodiversity and Conservation"
-]
-
-ZOOLOGY_CHAPTERS = [
-    "Structural Organization in Animals",
-    "Breathing and Exchange of Gases",
-    "Body Fluids and Circulation",
-    "Excretory Products & their Elimination",
-    "Locomotion & Movement",
-    "Neural Control & Coordination",
-    "Chemical Coordination & Integration",
-    "Animal Kingdom",
-    "Biomolecules",
-    "Human Reproduction",
-    "Reproduction Health",
-    "Human Health and Diseases",
-    "Biotechnology: Principles & Processes",
-    "Biotechnology and its Applications",
-    "Evolution"
-]
-
-# Create a mapping of all chapters to their respective channels
-CHAPTER_MAPPING = {}
-for chapter in PHYSICS_CHAPTERS:
-    CHAPTER_MAPPING[chapter.lower()] = PHYSICS_CHANNEL
-
-for chapter in PHYSICAL_CHEM_CHAPTERS:
-    CHAPTER_MAPPING[chapter.lower()] = PHYSICAL_CHEM_CHANNEL
-
-for chapter in IOC_CHAPTERS:
-    CHAPTER_MAPPING[chapter.lower()] = IOC_CHANNEL
-
-for chapter in OC_CHAPTERS:
-    CHAPTER_MAPPING[chapter.lower()] = OC_CHANNEL
-
-for chapter in BOTANY_CHAPTERS:
-    CHAPTER_MAPPING[chapter.lower()] = BOTANY_CHANNEL
-
-for chapter in ZOOLOGY_CHAPTERS:
-    CHAPTER_MAPPING[chapter.lower()] = ZOOLOGY_CHANNEL
-
-# Combine all chapters for fuzzy matching
-ALL_CHAPTERS = (PHYSICS_CHAPTERS + PHYSICAL_CHEM_CHAPTERS + 
-                IOC_CHAPTERS + OC_CHAPTERS + 
-                BOTANY_CHAPTERS + ZOOLOGY_CHAPTERS)
-
+if __name__ == "__main__":
+    logger.info("Starting Yakeen NEET 2.0 Bot...")
+    try:
+        app.run()
+        logger.info("Bot stopped gracefully")
+    except Exception as e:
+        logger.critical(f"Bot crashed: {str(e)}", exc_info=True)
+    finally:
+        logger.info("Bot process ended")
