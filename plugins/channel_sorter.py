@@ -67,7 +67,7 @@ CHAPTER_MAPPING = {
     "semiconductor electronics: materials, devices and simple circuits": PHYSICS_CHANNEL,
     
     # Physical Chemistry
-    "some basic concept of chemistry": PHYSICAL_CHEM_CHANNEL,
+    "some basic concepts of chemistry": PHYSICAL_CHEM_CHANNEL,
     "redox reaction": PHYSICAL_CHEM_CHANNEL,
     "solutions": PHYSICAL_CHEM_CHANNEL,
     "state of matter": PHYSICAL_CHEM_CHANNEL,
@@ -90,13 +90,14 @@ CHAPTER_MAPPING = {
     "salt analysis": IOC_CHANNEL,
     
     # OC
-    "organic chemistry: some basic principles and techniques (iupac naming)": OC_CHANNEL,
-    "organic chemistry: some basic principles and techniques (isomerism)": OC_CHANNEL,
-    "organic chemistry: some basic principles and techniques (goc)": OC_CHANNEL,
+    "iupac": OC_CHANNEL,
+    "isomerism": OC_CHANNEL,
+    "goc": OC_CHANNEL,
     "hydrocarbon": OC_CHANNEL,
-    "halosilkanes and haloarenes": OC_CHANNEL,
-    "alcohols, ethers and phenols": OC_CHANNEL,
-    "aldehydes, ketones and carboxylic acids": OC_CHANNEL,
+    "Haloalkanes": OC_CHANNEL,
+    "alcohol": OC_CHANNEL,
+    "alcohols": OC_CHANNEL,
+    "carboxylic acids": OC_CHANNEL,
     "amines": OC_CHANNEL,
     "biomolecules": OC_CHANNEL,
     "practical organic chemistry": OC_CHANNEL,
